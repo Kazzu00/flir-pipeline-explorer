@@ -2,10 +2,10 @@
 
 Read-only shallow clones under `.references/`; no scientific code executed, no source images or artifacts imported. These snapshots are evidence for interface vocabulary, not independent validation of scientific results.
 
-| Repository | Inspected commit | Evidence |
-|---|---|---|
-| [proyecto-FAC](https://github.com/Laura-Martinez-Galindo/proyecto-FAC) | `0eafdb3bcda4a9b1701daca8e41921e77332dccd` | README, scripts, `config/videos.json`, `scripts/calcular_metricas.py` |
-| [flir-leakage-pipeline](https://github.com/Kazzu00/flir-leakage-pipeline) | `9dd3d9e02c30d5006e49fb4d5c3d648dd481ee77` | README, `docs/status.md`, `docs/data_model.md`, `src/flir_pipeline/explorer/models.py`, CLI and module tree |
+| Repository                                                                                          | Inspected commit                           | Evidence                                                                                                    |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| [proyecto-FAC](https://github.com/Laura-Martinez-Galindo/proyecto-FAC)                              | `0eafdb3bcda4a9b1701daca8e41921e77332dccd` | README, scripts, `config/videos.json`, `scripts/calcular_metricas.py`                                       |
+| [flir-leakage-pipeline](https://github.com/Kazzu00/flir-leakage-pipeline)                           | `9dd3d9e02c30d5006e49fb4d5c3d648dd481ee77` | README, `docs/status.md`, `docs/data_model.md`, `src/flir_pipeline/explorer/models.py`, CLI and module tree |
 | [proyecto-segementacion-panoptica](https://github.com/manugalarza/proyecto-segementacion-panoptica) | `6810704ebfe7f1f1c0336ceb5f0758d25eac3b0c` | README, README_SEMANA8, docs/training, example config, training/train.py, evaluation script and JSON caveat |
 
 ## 01 · Preprocessing

@@ -86,7 +86,8 @@ select:focus-visible,
   outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
-main:focus, main:focus-visible {
+main:focus,
+main:focus-visible {
   outline: none;
 }
 h1,
@@ -946,7 +947,8 @@ tr:last-child td {
 .sample-image > span {
   font-size: 10px;
 }
-.sample-image > span, .sample-image > small {
+.sample-image > span,
+.sample-image > small {
   z-index: 1;
   background: var(--surface2);
   padding: 2px 5px;

@@ -16,7 +16,11 @@ export function SampleImage({
       <span>{label}</span>
       <small>SAMPLE · NO SOURCE IMAGE</small>
       {overlay && (
-        <div aria-hidden="true" className="sample-overlay" style={{ opacity }} />
+        <div
+          aria-hidden="true"
+          className="sample-overlay"
+          style={{ opacity }}
+        />
       )}
     </div>
   )
