@@ -86,7 +86,7 @@ select:focus-visible,
   outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
-main:focus {
+main:focus, main:focus-visible {
   outline: none;
 }
 h1,
@@ -457,7 +457,7 @@ footer span {
   font-family: monospace;
   font-size: 25px;
   line-height: 1;
-  color: var(--line);
+  color: var(--muted);
   font-weight: 600;
   pointer-events: none;
 }
@@ -945,6 +945,12 @@ tr:last-child td {
 }
 .sample-image > span {
   font-size: 10px;
+}
+.sample-image > span, .sample-image > small {
+  z-index: 1;
+  background: var(--surface2);
+  padding: 2px 5px;
+  border-radius: 2px;
 }
 .sample-image > small {
   font-size: 7px;
