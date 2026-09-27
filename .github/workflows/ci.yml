@@ -3,6 +3,17 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
+  exporter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install uv==0.12.10
+      - run: uvx ruff==0.16.9 check tools
+      - run: uvx ruff==0.16.9 format --check tools
+      - run: uv run --with numpy==2.2.6 --with pandas==2.2.3 --with pyarrow==20.0.0 --with pytest==8.4.2 pytest tools/tests -q
   frontend:
     runs-on: ubuntu-latest
     steps:
