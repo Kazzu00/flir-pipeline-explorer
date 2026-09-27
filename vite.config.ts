@@ -22,6 +22,8 @@ export default defineConfig({
     css: false,
   },
   build: {
+    // Local runtime snapshots must never be copied into distributable assets.
+    copyPublicDir: false,
     rollupOptions: {
       output: {
         manualChunks: (id: string) =>

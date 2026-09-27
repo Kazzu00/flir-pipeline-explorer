@@ -9,6 +9,8 @@ import { Reduction } from './reduction/Reduction'
 import { Clustering } from './clustering/Clustering'
 import { Splits } from './splitting/Splits'
 import { Detector } from './detector/Detector'
+import { useSnapshot } from '@/data/provider'
+import { ArtifactStage } from './ArtifactStage'
 const views: Record<string, React.ComponentType> = {
   dataset: Dataset,
   embeddings: Embeddings,
@@ -20,6 +22,7 @@ const views: Record<string, React.ComponentType> = {
   detector: Detector,
 }
 export function Organization() {
+  const { data } = useSnapshot()
   const { stage = '' } = useParams()
   const View = views[stage]
   const title =
@@ -42,7 +45,9 @@ export function Organization() {
           </NavLink>
         ))}
       </nav>
-      {View ? (
+      {data?.leakage ? (
+        <ArtifactStage key={stage} snapshot={data.leakage} stage={stage} />
+      ) : View ? (
         <View />
       ) : stage ? (
         <Link to="/organization">Return to module</Link>

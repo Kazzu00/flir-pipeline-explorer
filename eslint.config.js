@@ -6,6 +6,8 @@ export default tseslint.config(
   {
     ignores: [
       '.references/**',
+      '.tmp/**',
+      'public/runtime/**',
       'node_modules/**',
       'dist/**',
       'playwright-report/**',

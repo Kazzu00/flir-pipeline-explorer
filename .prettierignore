@@ -4,3 +4,8 @@ dist
 playwright-report
 test-results
 package-lock.json
+
+.tmp
+public/runtime
+.pytest_cache
+.ruff_cache

@@ -1285,6 +1285,12 @@ tr:last-child td {
   }
 }
 @media (max-width: 520px) {
+  .topbar .breadcrumb {
+    display: none;
+  }
+  .header-actions {
+    gap: 8px;
+  }
   main {
     padding: 24px 16px;
   }

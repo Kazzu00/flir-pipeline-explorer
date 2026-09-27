@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import { PageTitle, Panel, Notice } from '@/components/feedback/Primitives'
 import { Status } from '@/components/feedback/Status'
+import { useSnapshot } from '@/data/provider'
 export function Evaluation() {
+  const { data } = useSnapshot()
   return (
     <>
       <PageTitle
@@ -42,7 +44,8 @@ export function Evaluation() {
                 <td>Organization</td>
                 <td>Preservation / ARI / AMI / residual correlation</td>
                 <td>
-                  <Status state="mock" />
+                  <Status state={data?.leakage ? 'experimental' : 'mock'} />
+                  {data?.leakage && ' Artifact metrics reported upstream'}
                 </td>
                 <td>
                   <Link className="row-link" to="/organization/splits">

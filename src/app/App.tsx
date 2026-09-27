@@ -24,7 +24,12 @@ const Experiments = lazy(() =>
   })),
 )
 import { Evaluation } from '@/features/overview/Evaluation'
-import { useSnapshot } from '@/data/provider'
+import {
+  useSnapshot,
+  RuntimeDataProvider,
+  DataModeSwitch,
+} from '@/data/provider'
+import { SnapshotError } from '@/data/adapters/RealLeakageAdapter'
 const client = new QueryClient({ defaultOptions: { queries: { retry: 1 } } })
 function DataGate() {
   const { isPending, error, refetch } = useSnapshot()
@@ -38,8 +43,12 @@ function DataGate() {
     return (
       <div className="empty" role="alert">
         <h1>Data could not be validated</h1>
-        <p>The adapter did not provide a valid snapshot.</p>
+        <p>
+          {error instanceof SnapshotError ? error.kind : 'snapshot-unavailable'}
+          . No artifact data has been substituted with demo results.
+        </p>
         <button onClick={() => void refetch()}>Retry</button>
+        <DataModeSwitch />
       </div>
     )
   return (
@@ -76,7 +85,9 @@ export function App() {
   return (
     <QueryClientProvider client={client}>
       <BrowserRouter>
-        <DataGate />
+        <RuntimeDataProvider>
+          <DataGate />
+        </RuntimeDataProvider>
       </BrowserRouter>
     </QueryClientProvider>
   )

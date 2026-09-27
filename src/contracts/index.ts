@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { LeakageSnapshotV1 } from './leakage'
 
 export const VerificationState = z.enum([
   'verified',
@@ -21,7 +22,7 @@ export const Metric = z.object({
   name: Identity,
   value: z.number().finite().nullable(),
   unit: z.string(),
-  origin: z.enum(['mock', 'reported', 'unavailable']),
+  origin: z.enum(['mock', 'artifact', 'reported', 'unavailable']),
   caveat: z.string(),
 })
 export const ArtifactReference = z.object({
@@ -51,7 +52,7 @@ export const PipelineModule = z.object({
 export const DatasetSummary = z.object({
   id: Identity,
   name: Identity,
-  origin: z.literal('mock'),
+  origin: z.enum(['mock', 'artifact', 'reported', 'unavailable']),
   occurrences: z.number().int().nonnegative(),
   uniqueContents: z.number().int().nonnegative(),
   duplicateGroups: z.number().int().nonnegative(),
@@ -66,8 +67,8 @@ export const RunSummary = z.object({
   method: Identity,
   status: VerificationState,
   verification: VerificationState,
-  origin: z.literal('mock'),
-  seed: z.number().int(),
+  origin: z.enum(['mock', 'artifact', 'reported', 'unavailable']),
+  seed: z.number().int().nullable(),
   parameters: z.record(
     z.string(),
     z.union([z.string(), z.number(), z.boolean()]),
@@ -167,7 +168,8 @@ export const SnapshotSchema = z
     reductions: z.array(ReductionRun),
     clusterings: z.array(ClusteringRun),
     splits: z.array(SplitRun),
-    similarity: SimilarityRun,
+    similarity: SimilarityRun.nullable(),
+    leakage: LeakageSnapshotV1.optional(),
     segmentation: SegmentationRun,
     quality: z.array(
       z.object({

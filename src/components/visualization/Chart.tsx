@@ -6,7 +6,7 @@ import {
   TooltipComponent,
   LegendComponent,
 } from 'echarts/components'
-import { SVGRenderer } from 'echarts/renderers'
+import { SVGRenderer, CanvasRenderer } from 'echarts/renderers'
 import type { EChartsOption } from 'echarts'
 echarts.use([
   ScatterChart,
@@ -16,17 +16,20 @@ echarts.use([
   TooltipComponent,
   LegendComponent,
   SVGRenderer,
+  CanvasRenderer,
 ])
 export function Chart({
   option,
   label,
   onSelect,
   height = 340,
+  renderer = 'svg',
 }: {
   option: EChartsOption
   label: string
   onSelect?: (index: number) => void
   height?: number
+  renderer?: 'svg' | 'canvas'
 }) {
   return (
     <div role="img" aria-label={label} className="chart">
@@ -43,7 +46,7 @@ export function Chart({
           ...option,
         }}
         style={{ height }}
-        opts={{ renderer: 'svg' }}
+        opts={{ renderer }}
         onEvents={
           onSelect
             ? {

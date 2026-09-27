@@ -6,7 +6,7 @@ import { SampleImage } from '@/components/visualization/Gallery'
 export function Similarity() {
   const { data } = useSnapshot()
   const [index, setIndex] = useState('0')
-  if (!data) return null
+  if (!data?.similarity) return null
   const pair = data.similarity.pairs[Number(index)]
   return (
     <>

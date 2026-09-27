@@ -44,6 +44,7 @@ export function Experiments() {
     },
     { accessorKey: 'module', header: 'Module' },
     { accessorKey: 'stage', header: 'Stage' },
+    { accessorKey: 'origin', header: 'Origin' },
     { accessorKey: 'method', header: 'Method / model' },
     {
       accessorKey: 'status',
@@ -102,15 +103,22 @@ export function Experiments() {
           />
         </label>
       </div>
-      <Panel title="Run registry" meta={`${runs.length} runs · ALL DEMO`}>
+      <Panel
+        title="Run registry"
+        meta={`${runs.length} runs · ${data.leakage ? 'MIXED origins' : 'ALL DEMO'}`}
+      >
         <DataTable
-          label="Demo experiment registry"
+          label={
+            data.leakage
+              ? 'Mixed experiment registry'
+              : 'Demo experiment registry'
+          }
           data={runs}
           columns={columns}
         />
       </Panel>
       {run ? (
-        <Panel title={`Run detail · ${run.id}`} meta="DEMO">
+        <Panel title={`Run detail · ${run.id}`} meta={run.origin.toUpperCase()}>
           <div className="run-detail">
             <dl>
               <dt className="muted">Dataset</dt>

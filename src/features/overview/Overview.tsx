@@ -28,7 +28,10 @@ export function Overview() {
         </span>
         <span>CRISP-ML(Q) · Understanding → evaluation</span>
         <Link to="/experiments">
-          Browse demo experiments <ArrowRight size={14} />
+          {data.leakage
+            ? 'Browse mixed experiment registry'
+            : 'Browse demo experiments'}{' '}
+          <ArrowRight size={14} />
         </Link>
       </div>
       <div className="pipeline-input">
@@ -121,7 +124,11 @@ export function Overview() {
         </div>
         <div>
           <span className="eyebrow">INTEGRATION STATUS</span>
-          <p>Mock adapter active · APIs not connected</p>
+          <p>
+            {data.leakage
+              ? 'M02 local artifacts · M01/M03 DEMO'
+              : 'Mock adapter active · APIs not connected'}
+          </p>
         </div>
       </div>
     </>

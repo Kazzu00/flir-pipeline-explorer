@@ -16,8 +16,11 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { nav } from '@/app/navigation'
+import { useSnapshot, DataModeSwitch } from '@/data/provider'
 const icons = [Network, Layers, GitBranch, Box, FlaskConical, Activity]
 export function AppShell() {
+  const { data } = useSnapshot()
+  const mixed = !!data?.leakage
   const [open, setOpen] = useState(false)
   const [light, setLight] = useState(
     () => localStorage.getItem('flir-theme') === 'light',
@@ -77,9 +80,11 @@ export function AppShell() {
         </nav>
         <div className="sidebar-bottom">
           <div className="side-note">
-            <span className="status status-mock">◈ DEMO WORKSPACE</span>
+            <span className="status status-mock">
+              {mixed ? 'MIXED WORKSPACE' : '◈ DEMO WORKSPACE'}
+            </span>
             <p>
-              Synthetic data.
+              {mixed ? 'M02 local artifacts.' : 'Synthetic data.'}
               <br />
               Real research boundaries.
             </p>
@@ -123,9 +128,12 @@ export function AppShell() {
             </span>
           </nav>
           <div className="header-actions">
+            <DataModeSwitch />
             <span className="local-status">
               <span />
-              Mock adapter · local
+              {mixed
+                ? 'Artifact + mock adapters · local'
+                : 'Mock adapter · local'}
             </span>
             <Button
               variant="ghost"
@@ -140,8 +148,10 @@ export function AppShell() {
           </div>
         </header>
         <div className="demo-bar">
-          <span>DEMO</span>All displayed collections, runs and numeric metrics
-          are synthetic. Repository evidence is labeled separately.
+          <span>{mixed ? 'MIXED' : 'DEMO'}</span>
+          {mixed
+            ? 'Module 02: local artifacts. Modules 01 and 03: DEMO. Missing stages remain pending.'
+            : 'All displayed collections, runs and numeric metrics are synthetic. Repository evidence is labeled separately.'}
         </div>
         <main id="main" tabIndex={-1} ref={mainRef}>
           <Outlet />

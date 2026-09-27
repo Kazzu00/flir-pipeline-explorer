@@ -24,3 +24,11 @@ models/
 *.avi
 *.log
 *.tsbuildinfo
+
+!.env.example
+/public/runtime/*
+!/public/runtime/.gitkeep
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
