@@ -1,26 +1,20 @@
-# Arquitectura
+﻿# Arquitectura
 
 ```text
-Fuentes científicas (independientes; no conectadas)
-    → futuro normalizador/API
-    → DataAdapter → validación Zod → TanStack Query
-    → dominio React → visualización / tabla / detalle
-
-Hoy: fixture sintética → MockDataAdapter → misma frontera
+DEMO: fixture sintética → MockDataAdapter → SnapshotSchema
+REAL: artifacts M02 → exportador read-only → LeakageSnapshotV1 → Zod
+      → RealLeakageAdapter → CompositeDataAdapter (+ mock M01/M03)
+      → SnapshotSchema → TanStack Query → rutas React existentes
 ```
 
-La unidad de carga actual es `Snapshot` schemaVersion=1. Es pequeña y apropiada para este prototipo. El contexto inyecta el adapter; su `id` estable particiona la caché. `AbortSignal` permite cancelación. Las pantallas no importan la fixture, acceden a filesystem ni interpretan contratos nativos. Los adapters deben normalizar y validar antes de devolver datos.
+Los componentes consumen `useSnapshot`; no abren Parquet, NPY, CSV ni rutas científicas. El exportador Python es una herramienta offline de transformación y validación, no un backend ni un ejecutor de ciencia. Separa los contratos upstream de la presentación. Los metadatos arbitrarios se descartan mediante listas permitidas antes de escribir el JSON.
 
-Los módulos tienen rutas propias y carga bajo demanda. React Query gestiona datos remotos; React local gestiona selección, filtros, comparación y opacidad. El parámetro `module` del registro de experimentos se conserva en la URL. El tema es una preferencia local. No existe almacenamiento de resultados ni sesiones de usuario.
+`RuntimeDataProvider` usa `VITE_DATA_MODE=demo|real` y permite cambio explícito en la UI. Los IDs de los adapters particionan la caché de Query. REAL carga el snapshot local con `AbortSignal`, `cache: no-store` y errores seguros; no usa credenciales externas. Si falla, no entrega M02 mock. El composite elimina todos los registros mock de M02, conserva los otros módulos, incorpora el dominio `leakage` y normaliza el registro de experimentos. Las rutas y el shell son los mismos en ambos modos; `ArtifactStage` presenta evidencia real sin asumir IDs, colecciones o rangos de la demo. Los widgets de gráficos, selección, métricas y paneles se comparten.
 
-Las tablas usan TanStack Table para ordenación, semántica HTML nativa y contenedores de scroll. ECharts usa renderer SVG y solo los módulos requeridos. La galería expone explícitamente que no hay imágenes conectadas; el overlay panóptico es un esquema de interfaz, no una segmentación calculada.
+`Snapshot` schemaVersion=1 sigue siendo el sobre de UI; su dominio real adicional usa el discriminador independiente `LeakageSnapshotV1`. El contrato real incluye ocurrencias completas, índices por feature space, coordenadas por run, referencias upstream y orígenes explícitos. No se unen datasets ni experimentos de M01/M03 con los de M02. El indicador global es MIXED y cada run conserva su origen.
 
-## Integración posterior
+Los módulos tienen imports dinámicos. React Query gestiona carga/caché; el estado local gestiona selección, filtros y BEFORE/AFTER. ECharts usa Canvas para las proyecciones de artifacts y SVG para gráficos pequeños/demo. Las coordenadas no se normalizan a rangos ficticios y no se submuestrean. Las tablas reales paginan filas; las galerías muestran seis identidades con thumbnails no disponibles, sin simular imágenes. Las ocurrencias se muestran como puntos discretos por fuente/índice de muestreo, no como intervalos de captura continuos.
 
-1. Acordar esquemas y permisos con cada dueño del pipeline, incluyendo estados de validación y granularidad de las métricas.
-2. Implementar normalizadores fuera de los componentes; nunca convertir un path privado en una URL pública.
-3. Extender el contrato de procedencia de v1 (mock-only) para recibos reportados/verificados y cambiar la etiqueta global en función de ese contrato.
-4. Implementar `APIDataAdapter` con validación Zod, cancelación, errores y pruebas con datos sintéticos. Inyectarlo mediante `DataAdapterContext.Provider` y usar un `id` de caché distinto.
-5. Para imágenes, añadir referencias autorizadas y estados de carga/error. Para volumen real, paginar galerías/tablas, seleccionar campos mínimos y acordar muestreo de visualización. No ejecutar reducción/clustering en cliente.
+Los assets de `public/runtime` solo se sirven localmente y se excluyen de `dist` mediante `copyPublicDir: false`. No hay despliegue, backend, autenticación, uploads, WebSockets ni control de jobs. El lote compartido de ECharts sigue generando una advertencia de tamaño de Vite; la validación de 9.000 puntos es sintética, no un benchmark general de rendimiento.
 
-No hay deployment, backend, autenticación, uploads ni ciencia ejecutada en esta versión. El hosting futuro necesita SPA fallback. El lote compartido de ECharts sigue siendo relativamente grande (aproximadamente 579 kB minificado / 196 kB gzip) y Vite lo precarga por dependencias compartidas; permanece una oportunidad de optimización. Los módulos de dominio sí tienen imports dinámicos.
+Detalles operativos, límites y garantías: [REAL_DATA_INTEGRATION](REAL_DATA_INTEGRATION.md). Contratos e invariantes: [DATA_CONTRACTS](DATA_CONTRACTS.md).

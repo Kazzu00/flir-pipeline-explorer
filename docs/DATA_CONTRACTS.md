@@ -1,36 +1,44 @@
-# Contratos y evidencia
+﻿# Contratos y evidencia
 
-Fuente ejecutable: `src/contracts/index.ts`. `SnapshotSchema.parse` se aplica dentro de `MockDataAdapter`; validación fallida produce un estado de error y opción de reintento. Tipos derivados de Zod evitan divergencia entre interfaz y runtime.
+Fuentes ejecutables: `src/contracts/index.ts` para el sobre de UI y `src/contracts/leakage.ts` para artifacts M02. Los tipos se derivan de Zod. Cada adapter valida antes de exponer datos a React.
 
-| Contrato                           | Responsabilidad                                                                   |
-| ---------------------------------- | --------------------------------------------------------------------------------- |
-| PipelineModule / PipelineStage     | Vocabulario, output, estado y evidencia del repositorio                           |
-| DatasetSummary                     | Identidad, ocurrencias, contenidos, duplicados y procedencia                      |
-| RunSummary                         | Módulo, etapa, dataset, método, seed, parámetros, lifecycle, verification, caveat |
-| ArtifactReference                  | Referencia normalizada, formato, estado y descripción; no paths privados          |
-| EmbeddingRun                       | Encoder, dimensiones, pooling, feature space, cobertura                           |
-| SimilarityRun                      | Pares coseno y distribución; source-video relation y sample gap separados         |
-| ReductionRun                       | Método t-SNE/PaCMAP, encoder, parámetros, métricas, candidato explícito           |
-| ClusteringRun / ClusterSummary     | Contenidos únicos, coordenadas, clústeres, noise, medoid DEMO                     |
-| SplitRun                           | Referencia al clustering, memberships de contenido y asignaciones por ocurrencia  |
-| SegmentationRun / PredictionResult | Variante, predicciones, métricas por imagen/clase, caveats                        |
+## Snapshot de UI
 
-## Invariantes implementadas
+`SnapshotSchema` conserva `schemaVersion: 1`, módulos, dataset, registro de runs y colecciones demo. `origin` en dataset/run/métrica admite `mock`, `artifact`, `reported`, `unavailable`. Predicciones de M03 siguen siendo mock. En modo mixto `leakage` contiene el dominio artifact; las antiguas colecciones demo M02 quedan vacías y `similarity` es `null`. No se generan coordenadas o asignaciones fake para satisfacer el sobre. Una semilla desconocida es `null`, no cero.
 
-- Números finitos; coseno en [-1,1]; métricas ausentes `null`, no cero.
-- Un content_id por fila de clustering; frame_id conserva cada ocurrencia.
-- Secuencia no verificada no puede presentarse como sequenceId válido.
-- Tamaño y medoid consistentes con los miembros del clúster.
-- Un grupo por clúster no negativo; noise con grupos singleton.
-- Referencia de split válida, cobertura exacta de contenidos y ocurrencias.
-- Conteos por split reconstruibles de sus ocurrencias y coherentes con memberships de contenido.
-- Nuevas particiones asignan un contenido una vez. Historical admite múltiples memberships auditables.
-- Cluster-aware no fragmenta grupos. Random/content no promete integridad del clúster.
+La fixture DEMO conserva sus invariantes de unicidad, tamaños/medoids, ruido singleton, referencias y asignaciones por ocurrencia. Historical admite overlap explícito; Random/content conserva cada contenido; Cluster-aware mantiene íntegros los grupos.
 
-## Procedencia y límites de v1
+## LeakageSnapshotV1
 
-Las identidades usan prefijo `demo-`, nunca hashes reales. `origin: mock` es obligatorio para datasets/runs/predicciones de v1; `Metric.origin` admite además reported/unavailable para una evolución posterior. El aviso global permanece siempre DEMO. Ningún adaptador debe insertar evidencia real bajo esa etiqueta. Ampliar el contrato y el aviso es un cambio explícito previo a conectar datos reales.
+JSON con `schemaVersion: "LeakageSnapshotV1"`, `dataset`, `contents`, `runs`, `exportPolicy`. El exportador construye exclusivamente campos conocidos; Zod rechaza campos desconocidos del snapshot, runs y registros de procedencia.
 
-El snapshot describe una única colección pequeña, completa y validada. No modela aún archivos grandes, paginación, múltiples datasets simultáneos ni autorizaciones. Arrays raw/L2 no se sirven a la UI; un adapter futuro expondría resúmenes de validación y coordenadas precomputadas. El schema no sustituye verificación científica de distancias, métricas o entrenamiento.
+| Campo                    | Semántica                                                                                                                          |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| dataset                  | Alias, versión `flir_video_samples_v1`, origen artifact, cobertura de ocurrencias/contenidos/duplicados                            |
+| contents                 | Una entrada por contenido y todas sus ocurrencias, incluidas membresías multivideo                                                 |
+| occurrence               | Alias frame/video, índice y segundos de grilla; secuencia y captura siempre `null`                                                 |
+| run                      | Etapa/método tipados, encoder, semilla nullable, aliases dataset/feature/similarity/reduction/clustering/split y configuration     |
+| contentIndex             | Orden completo `contentId → embeddingRow` de cada feature space; nunca vectores                                                    |
+| coordinates              | `contentId, embeddingRow, x, y` de una reducción persistida; vacío si no se exportó ese run para visualización                     |
+| pairs                    | Aristas top-k dirigidas con rank, coseno, relación de fuente y gaps mínimos reportados                                             |
+| summaries                | Tablas reportadas por fuente, sample gap, grid gap, top-k, configuración/estabilidad; etiquetas fijas o aliases, nunca texto libre |
+| labels                   | Un cluster por contenido, ruido -1 y medoid reportado                                                                              |
+| assignments              | Cada frame y su contenido con train/validation/test; ausente si no existe split                                                    |
+| metrics / parameters     | Valores numéricos finitos o null mediante lista permitida; sin paths ni metadata arbitraria                                        |
+| integrity / metricOrigin | `export-validated` para controles de transporte; métricas normalmente `reported`                                                   |
 
-Los métodos alternativos y sus coordenadas en las fixtures solo prueban estados e interacción: no simulan fielmente el resultado de DBSCAN/OPTICS/HDBSCAN ni permiten comparar su calidad.
+### Invariantes
+
+- Conteos y unicidad de contenidos/ocurrencias; todas las ocurrencias conservan el mapping.
+- Mismo dataset en todas las etapas; referencias existentes, etapa y encoder compatibles; continuidad del feature space.
+- DINOv2: 384 dimensiones, CLS; CLIP: 512, projected pooler output. Cobertura completa, no smoke tests mezclados con el dataset.
+- Índice único y secuencial de features. Coordenadas finitas con cobertura completa y el mismo mapping de filas.
+- Un método admitido por etapa; las coordenadas solo pertenecen a reducción, pares a similarity, etiquetas a clustering y asignaciones a splits.
+- Clusters únicos por contenido; ruido explícito. Split con cobertura exacta de ocurrencias. Cluster-aware exige clustering compatible y no divide clústeres; ruido se trata como grupo singleton.
+- Detector exige referencia de split. El exportador rechaza pilotos como resultados finales y exige controles declarados de evaluación.
+- Source video nunca se convierte en sequenceId; timestamps de captura no se deducen de la grilla.
+- Los errores del validador se convierten en códigos seguros, no se imprimen paths ni datos rechazados en el DOM.
+
+Los aliases son locales al snapshot, no claves científicas globales. La continuidad original se valida en el exporter antes de sustituir IDs. Estos controles no recomputan métricas ni demuestran validez experimental. La evidencia científica y la configuración completa de reproducción permanecen en los artifacts originales.
+
+La fixture `src/test/fixtures/leakage-synthetic.json` es completamente sintética y compartida con los tests Python. No es un snapshot de resultados reales. Los límites de tamaño, inputs nativos admitidos y campos no exportados se documentan en [REAL_DATA_INTEGRATION](REAL_DATA_INTEGRATION.md).

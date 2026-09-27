@@ -1,11 +1,12 @@
 # FLIR Pipeline Explorer
 
-Interfaz de investigación para explorar tres pipelines independientes de visión por computador sobre video aéreo de la Amazonía colombiana. **Prototipo frontend funcional con datos DEMO; no ejecuta procesamiento científico.**
+Interfaz de investigación para explorar tres pipelines independientes de visión por computador sobre video aéreo de la Amazonía colombiana. **DEMO por defecto; M02 admite snapshots locales de artifacts existentes. No ejecuta procesamiento científico.**
 
 ## Estado
 
 - Implementado: Home con el pipeline completo; navegación por módulos y etapas; explorador de clustering con scatter, selección, detalles, timeline por grilla y galería; BEFORE / AFTER SPLIT; comparación de particiones; registro de experimentos; temas claro/oscuro.
 - Implementado: contratos Zod, adaptador mock, estados de carga/error/vacío, tests unitarios y pruebas Chromium/axe.
+- Implementado: exportador read-only, `LeakageSnapshotV1`, adapters real/composite, modo MIXED, proyecciones persistidas y estados pendientes sin fallback científico a mock. Validación exclusivamente sintética en esta entrega; ninguna exportación con artifacts privados ejecutada.
 - No conectado: APIs científicas, imágenes, máscaras reales, embeddings, trabajos de entrenamiento y resultados controlados. Los espacios visuales de imágenes son placeholders explícitos; las galerías permiten seleccionar identidades DEMO.
 - No ejecutado: experimentos científicos ni validación independiente de resultados upstream. La UI no certifica que un split elimine toda dependencia.
 - No desplegado: se entrega código en GitHub y ejecución local, sin servicio de hosting ni backend.
@@ -50,7 +51,7 @@ src/components/                layout, UI, feedback, visualizaciones
 src/features/                  overview, preprocessing, organization,
                                segmentation, experiments
 src/contracts/                 esquemas Zod e invariantes
-src/data/adapters/             DataAdapter y MockDataAdapter
+src/data/adapters/             MockDataAdapter, RealLeakageAdapter, composite
 src/data/mock/                 fixture determinista
 src/data/provider.tsx          frontera React Query / adapter
 src/styles/                   tokens, temas y responsive
@@ -81,11 +82,23 @@ e2e/                          navegador y axe
 
 En clustering, elegir un run y un clúster mediante scatter, botones o timeline. AFTER SPLIT agrega símbolos para train/validation/test sin cambiar el clúster. Solo DBSCAN tiene un split compatible en la fixture; en los otros runs el botón se deshabilita. No se inventan secuencias: la timeline usa índices de muestreo por video fuente.
 
-## Datos DEMO y futura integración
+## Datos DEMO e integración local
 
 La fixture contiene **144 contenidos sintéticos, 156 ocurrencias, 12 grupos de copias, 6 clústeres y 12 contenidos noise**. No coincide deliberadamente con los conteos del dataset real. Los tres algoritmos muestran fixtures ilustrativas, no resultados comparativos de algoritmos. Las curvas NIQE son sintéticas y no se reconstruyen de resúmenes XLSX. Las métricas no disponibles de evaluación científica son `null`.
 
-`DataAdapter.getSnapshot(signal)` devuelve un snapshot validado. `DataAdapterContext` permite sustituir el adaptador sin reescribir visualizaciones. La versión 1 es deliberadamente de demostración: aceptar evidencia real requiere ampliar la procedencia tipada, actualizar la política de etiquetas y aportar tests de normalización. No existe todavía `APIDataAdapter`; no hay un endpoint oculto ni acceso directo a archivos upstream.
+`DataAdapter.getSnapshot(signal)` devuelve un snapshot validado. `DataAdapterContext` permite sustituir el adaptador. `RealLeakageAdapter` consume JSON saneado; `CompositeDataAdapter` integra M02 y conserva M01/M03 en DEMO, con indicador MIXED. No existe `APIDataAdapter`, endpoint científico ni acceso desde React a archivos upstream. Las etapas reales ausentes quedan pendientes.
+
+Consultar [REAL_DATA_INTEGRATION](docs/REAL_DATA_INTEGRATION.md) para generar el snapshot con rutas explícitas de manifest, DINOv2/CLIP, similarity v2 y reduction. El exporter acepta runs opcionales de clustering/split/detector compatibles; no ejecuta esas etapas. Los artifacts reales nunca se versionan y `public/runtime` no se copia a `dist`.
+
+Tras generar `public/runtime/leakage-snapshot.json`:
+
+```powershell
+$env:VITE_DATA_MODE = "real"
+$env:VITE_LEAKAGE_SNAPSHOT_URL = "/runtime/leakage-snapshot.json"
+npm run dev
+```
+
+También puede usarse el selector **Data mode**. `.env.example` documenta el modo predeterminado. Las imágenes reales siguen sin conectarse.
 
 Consultar [DATA_CONTRACTS](docs/DATA_CONTRACTS.md), [ARCHITECTURE](docs/ARCHITECTURE.md), [INFORMATION_ARCHITECTURE](docs/INFORMATION_ARCHITECTURE.md) y [UX_STANDARDS](docs/UX_STANDARDS.md).
 
