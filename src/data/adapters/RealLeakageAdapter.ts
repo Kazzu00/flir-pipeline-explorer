@@ -1,4 +1,5 @@
-import { LeakageSnapshotV1, type LeakageSnapshot } from '@/contracts/leakage'
+import type { LeakageSnapshot } from '@/contracts/leakage'
+import { LeakageSnapshotSchema } from '@/contracts/leakage-v2'
 
 export type DataFailure =
   | 'snapshot-missing'
@@ -13,7 +14,7 @@ export class SnapshotError extends Error {
   }
 }
 export function parseLeakageSnapshot(input: unknown): LeakageSnapshot {
-  const result = LeakageSnapshotV1.safeParse(input)
+  const result = LeakageSnapshotSchema.safeParse(input)
   if (!result.success)
     throw new SnapshotError(
       result.error.issues.every((i) => i.code === 'custom')

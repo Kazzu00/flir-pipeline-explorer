@@ -879,6 +879,11 @@ def parser():
     for stage in ("clustering", "splitting", "detection"):
         cli.add_argument(f"--{stage}", type=Path, action="append", default=[])
     cli.add_argument("--output", type=Path, required=True)
+    cli.add_argument("--schema-version", choices=("v1", "v2"), default="v1")
+    for stage in ("sequences", "linkage", "linkage-review", "linkage-aggregate"):
+        cli.add_argument(f"--{stage}", type=Path)
+    for stage in ("sequence-experiment", "sequence-evidence", "dataset-variant"):
+        cli.add_argument(f"--{stage}", type=Path, action="append", default=[])
     return cli
 
 
@@ -887,6 +892,7 @@ def export(args):
     # Never create an output inside an input artifact directory.
     inputs = [v for k, v in vars(args).items() if k != "output" and isinstance(v, Path)]
     inputs += args.clustering + args.splitting + args.detection
+    inputs += args.sequence_experiment + args.sequence_evidence + args.dataset_variant
     require(
         all(
             not args.output.resolve().is_relative_to(
@@ -912,11 +918,41 @@ def export(args):
         ("detection", exporter.detection),
     ):
         for path in getattr(args, stage):
-            if path.exists():
-                method(path)
-            else:
-                print(f"{stage}: unavailable input; stage remains pending.", file=sys.stderr)
+            require(path.exists(), "explicit-artifact-missing")
+            method(path)
     result = exporter.snapshot()
+    research_inputs = any(
+        getattr(args, key)
+        for key in (
+            "sequences",
+            "sequence_experiment",
+            "sequence_evidence",
+            "linkage",
+            "linkage_review",
+            "linkage_aggregate",
+            "dataset_variant",
+        )
+    )
+    if args.schema_version == "v2" or research_inputs:
+        try:
+            from tools.export_research import ResearchExporter
+        except ModuleNotFoundError:
+            from export_research import ResearchExporter
+        research = ResearchExporter(exporter, require, read_json, digest)
+        for key, method in (
+            ("sequences", research.sequences),
+            ("sequence_experiment", research.experiments),
+            ("sequence_evidence", research.evidence),
+            ("linkage", research.linkage),
+            ("linkage_review", research.review),
+            ("linkage_aggregate", research.aggregate),
+            ("dataset_variant", research.variant),
+        ):
+            value = getattr(args, key)
+            for path in value if isinstance(value, list) else [value] if value else []:
+                require(path.exists(), "explicit-artifact-missing")
+                method(path)
+        result.update(schemaVersion="LeakageSnapshotV2", research=research.finish())
     require(len(result["runs"]) <= 256, "run-limit")
     payload = json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(",", ":"))
     require(len(payload.encode()) <= 80 * 1024 * 1024, "snapshot-size-limit")

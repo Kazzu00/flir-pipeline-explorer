@@ -342,5 +342,7 @@ export const LeakageSnapshotV1 = z
       }
     }
   })
-export type LeakageSnapshot = z.infer<typeof LeakageSnapshotV1>
+export type LeakageSnapshot =
+  | z.infer<typeof LeakageSnapshotV1>
+  | z.infer<typeof import('./leakage-v2').LeakageSnapshotV2>
 export type ArtifactRun = z.infer<typeof LeakageRun>

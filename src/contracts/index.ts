@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { LeakageSnapshotV1 } from './leakage'
+import { LeakageSnapshotSchema } from './leakage-v2'
 
 export const VerificationState = z.enum([
   'verified',
@@ -169,7 +169,7 @@ export const SnapshotSchema = z
     clusterings: z.array(ClusteringRun),
     splits: z.array(SplitRun),
     similarity: SimilarityRun.nullable(),
-    leakage: LeakageSnapshotV1.optional(),
+    leakage: LeakageSnapshotSchema.optional(),
     segmentation: SegmentationRun,
     quality: z.array(
       z.object({

@@ -309,7 +309,7 @@ class ExportTests(unittest.TestCase):
         with self.assertRaisesRegex(ex.ExportError, "output-exists"):
             ex.export(args)
 
-    def test_missing_optional_stage_stays_pending(self):
+    def test_explicit_missing_stage_is_error_and_omitted_stage_stays_pending(self):
         args = ex.parser().parse_args(
             [
                 "--manifest",
@@ -320,6 +320,10 @@ class ExportTests(unittest.TestCase):
                 str(self.root / "snapshot.json"),
             ]
         )
+        with self.assertRaisesRegex(ex.ExportError, "explicit-artifact-missing"):
+            ex.export(args)
+        self.assertFalse(args.output.exists())
+        args.clustering = []
         result = ex.export(args)
         self.assertEqual(result["runs"], [])
         self.assertTrue(args.output.exists())
