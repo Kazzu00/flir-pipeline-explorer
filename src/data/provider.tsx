@@ -10,25 +10,33 @@ import type { DataAdapter } from './adapters/types'
 import { MockDataAdapter } from './adapters/MockDataAdapter'
 import { CompositeDataAdapter } from './adapters/CompositeDataAdapter'
 import { RealLeakageAdapter } from './adapters/RealLeakageAdapter'
+import { resolveRuntimeConfig } from './runtime-config'
 export const DataModeContext = createContext<{
   mode: 'demo' | 'real'
   setMode: (mode: 'demo' | 'real') => void
 }>({ mode: 'demo', setMode: () => {} })
 export function RuntimeDataProvider({ children }: { children: ReactNode }) {
+  const [config] = useState(() =>
+    resolveRuntimeConfig(window.__FLIR_CONFIG__, import.meta.env),
+  )
   const [mode, setMode] = useState<'demo' | 'real'>(
-    import.meta.env.VITE_DATA_MODE === 'real' ? 'real' : 'demo',
+    config.success ? config.data.dataMode : 'demo',
   )
   const adapter = useMemo(
     () =>
-      mode === 'real'
-        ? new CompositeDataAdapter(
-            new RealLeakageAdapter(
-              import.meta.env.VITE_LEAKAGE_SNAPSHOT_URL ||
-                '/runtime/leakage-snapshot.json',
-            ),
-          )
-        : new MockDataAdapter(),
-    [mode],
+      !config.success
+        ? {
+            id: 'invalid-runtime-configuration',
+            getSnapshot: async () => {
+              throw new Error('invalid-runtime-configuration')
+            },
+          }
+        : mode === 'real'
+          ? new CompositeDataAdapter(
+              new RealLeakageAdapter(config.data.snapshotUrl),
+            )
+          : new MockDataAdapter(),
+    [mode, config],
   )
   return (
     <DataModeContext.Provider value={{ mode, setMode }}>

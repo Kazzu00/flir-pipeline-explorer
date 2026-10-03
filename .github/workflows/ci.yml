@@ -3,6 +3,28 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t flir-pipeline-explorer .
+      - run: docker compose up -d --build --wait
+      - run: |
+          curl --fail http://localhost:8080/health
+          curl --fail http://localhost:8080/organization/sequences
+          curl --fail http://localhost:8080/runtime-config.js
+          curl --fail http://localhost:8080/runtime-config.js | grep '"dataMode":"demo"'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/runtime/missing.json)" = 404
+      - name: Verify runtime switch and mounted synthetic snapshot
+        run: |
+          cp src/test/fixtures/leakage-v2-synthetic.json public/runtime/leakage-snapshot.json
+          FLIR_DATA_MODE=real docker compose up -d --no-build --force-recreate --wait
+          curl --fail http://localhost:8080/runtime-config.js | grep '"dataMode":"real"'
+          curl --fail http://localhost:8080/runtime/leakage-snapshot.json -o /tmp/mounted-snapshot.json
+          cmp src/test/fixtures/leakage-v2-synthetic.json /tmp/mounted-snapshot.json
+          docker inspect --format '{{range .Mounts}}{{if eq .Destination "/usr/share/nginx/html/runtime"}}{{.RW}}{{end}}{{end}}' "$(docker compose ps -q frontend)" | grep '^false$'
+      - if: always()
+        run: docker compose down
   exporter:
     runs-on: ubuntu-latest
     steps:

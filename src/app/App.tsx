@@ -44,7 +44,11 @@ function DataGate() {
       <div className="empty" role="alert">
         <h1>Data could not be validated</h1>
         <p>
-          {error instanceof SnapshotError ? error.kind : 'snapshot-unavailable'}
+          {error instanceof SnapshotError
+            ? error.kind
+            : error.message === 'invalid-runtime-configuration'
+              ? 'invalid-runtime-configuration'
+              : 'snapshot-unavailable'}
           . No artifact data has been substituted with demo results.
         </p>
         <button onClick={() => void refetch()}>Retry</button>
