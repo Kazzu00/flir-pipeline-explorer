@@ -57,6 +57,12 @@ test('runtime V2, sequence evidence, linkage and keyboard disclosure', async ({
     fullPage: true,
   })
   await page
+    .getByRole('button', { name: /sequence instance sequence-000002/ })
+    .click()
+  await expect(
+    page.getByText('Bound source-set review', { exact: true }),
+  ).toBeVisible()
+  await page
     .getByRole('button', { name: 'Cross-dataset linkage', exact: true })
     .click()
   await expect(page.getByText('candidate', { exact: true })).toBeVisible()

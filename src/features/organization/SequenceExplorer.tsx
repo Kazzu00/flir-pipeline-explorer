@@ -149,7 +149,12 @@ function SequenceStructure({ research }: { research?: Research }) {
                   },
                   {
                     label: 'Review',
-                    value: current.reviewId ? 'Bound review' : 'Pending',
+                    value: current.reviewId
+                      ? 'Bound review'
+                      : current.kind === 'sequence_instance' &&
+                          seq.instanceReviewBound
+                        ? 'Bound source-set review'
+                        : 'Pending',
                   },
                 ]}
               />
