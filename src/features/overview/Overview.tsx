@@ -64,28 +64,18 @@ export function Overview() {
                 <ArrowUpRight size={23} />
               </Link>
               <p className="module-subtitle">{m.subtitle}</p>
-              <p className="module-description">{m.description}</p>
-              <ol className="stage-list">
-                {m.stages.map((s, j) => (
-                  <li key={s.id}>
-                    <span className="stage-index">
-                      {String(j + 1).padStart(2, '0')}
-                    </span>
-                    <span>{s.name}</span>
-                    <span className="stage-dot" />
-                  </li>
-                ))}
-              </ol>
-              <div className="module-output">
-                <span className="eyebrow">OUTPUT</span>
-                <strong>
-                  {i === 0
-                    ? 'Cleaned frames + quality reports'
-                    : i === 1
-                      ? 'Representations + indivisible groups'
-                      : 'Predictions + evaluation reports'}
-                </strong>
-              </div>
+              {m.id === 'organization' && (
+                <div className="home-fork">
+                  <span>Visual structure</span>
+                  <span>↘ Representation & organization ↗</span>
+                  <span>Temporal structure</span>
+                </div>
+              )}
+              <p className="module-evidence">
+                {m.id === 'organization' && data.leakage
+                  ? 'ARTIFACT · missing stages pending'
+                  : 'DEMO · synthetic exploration'}
+              </p>
               <div className="module-foot">
                 <span className="micro">SOURCE EVIDENCE · NOT REVERIFIED</span>
                 <Link to={`/${m.id}`}>

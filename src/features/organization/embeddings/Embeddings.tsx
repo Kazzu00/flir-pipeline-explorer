@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useSnapshot } from '@/data/provider'
 import { Panel, Select, Notice } from '@/components/feedback/Primitives'
 import { Scatter } from '../clustering/Scatter'
+import { TechnicalDetailsDrawer } from '@/components/research/TechnicalDetailsDrawer'
 import { Gallery } from '@/components/visualization/Gallery'
 export function Embeddings() {
   const { data } = useSnapshot()
@@ -68,23 +69,29 @@ export function Embeddings() {
             ))}
           </div>
         </Panel>
-        <Panel title="Feature-space identity">
-          <dl className="details">
-            <dt>Encoder</dt>
-            <dd>{embedding.encoder}</dd>
-            <dt>Representation</dt>
-            <dd>{embedding.pooling}</dd>
-            <dt>Dimensions</dt>
-            <dd>{embedding.dimensions}</dd>
-            <dt>Coverage</dt>
-            <dd>{embedding.coverage} / 144 · DEMO</dd>
-            <dt>Feature space</dt>
-            <dd className="mono">{embedding.featureSpaceId}</dd>
-            <dt>Selected content</dt>
-            <dd className="mono">{point.contentId}</dd>
-            <dt>Occurrence mapping</dt>
-            <dd className="mono">{point.frameIds.join(', ')}</dd>
-          </dl>
+        <Panel title="Selected content" meta="DEMO">
+          <p className="panel-body">
+            {point.contentId} · {embedding.encoder} · {embedding.dimensions}{' '}
+            dimensions
+          </p>
+          <TechnicalDetailsDrawer title="Feature-space identity">
+            <dl className="details">
+              <dt>Encoder</dt>
+              <dd>{embedding.encoder}</dd>
+              <dt>Representation</dt>
+              <dd>{embedding.pooling}</dd>
+              <dt>Dimensions</dt>
+              <dd>{embedding.dimensions}</dd>
+              <dt>Coverage</dt>
+              <dd>{embedding.coverage} / 144 · DEMO</dd>
+              <dt>Feature space</dt>
+              <dd className="mono">{embedding.featureSpaceId}</dd>
+              <dt>Selected content</dt>
+              <dd className="mono">{point.contentId}</dd>
+              <dt>Occurrence mapping</dt>
+              <dd className="mono">{point.frameIds.join(', ')}</dd>
+            </dl>
+          </TechnicalDetailsDrawer>
         </Panel>
       </div>
       <Panel title="Selection gallery" meta="DEMO · images not connected">

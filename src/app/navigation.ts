@@ -1,14 +1,19 @@
 export const organizationTabs = [
   ['', 'Overview'],
-  ['dataset', 'Dataset / manifest'],
-  ['embeddings', 'Embeddings'],
-  ['similarity', 'Similarity'],
-  ['reduction', 'Reduction'],
-  ['clustering', 'Clustering'],
-  ['groups', 'Source / group analysis'],
-  ['splits', 'Splits'],
-  ['detector', 'Detector evaluation'],
+  ['explore', 'Visual exploration'],
+  ['sequences', 'Sequences & linkage'],
+  ['evaluation', 'Evaluation'],
 ] as const
+export const legacyOrganizationRoutes: Record<string, string> = {
+  dataset: '/organization',
+  embeddings: '/organization/explore?view=embeddings',
+  similarity: '/organization/explore?view=similarity',
+  reduction: '/organization/explore?view=reduction',
+  clustering: '/organization/explore?view=clustering',
+  groups: '/organization/sequences',
+  splits: '/organization/evaluation?view=splits',
+  detector: '/organization/evaluation?view=detector',
+}
 export const nav = [
   ['/', 'Pipeline overview'],
   ['/preprocessing', 'Preprocessing'],
