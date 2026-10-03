@@ -93,7 +93,7 @@ Tests sintéticos compartidos entre exporter y Zod en `src/test/fixtures/leakage
 ```powershell
 uvx ruff==0.16.9 check tools
 uvx ruff==0.16.9 format --check tools
-uv run --with numpy==2.2.6 --with pandas==2.2.3 --with pyarrow==20.0.0 --with pytest==8.4.2 pytest tools/tests -q
+uv run --with numpy==2.2.6 --with pandas==2.2.3 --with pyarrow==20.0.0 --with pytest==8.4.2 python -m pytest tools/tests -q
 npm run lint
 npm run typecheck
 npm run test

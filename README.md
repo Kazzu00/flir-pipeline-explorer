@@ -7,7 +7,7 @@ Interfaz de investigación para explorar tres pipelines independientes de visió
 - **Implementado:** M02 con cuatro secciones: Overview, Visual exploration, Sequences & linkage y Evaluation; Home como pipeline navegable; detalles técnicos en drawers accesibles; selección enlazada entre scatter, contenido y grilla de muestreo.
 - **Integración conservada:** V1 y V2 validados por Zod, modo REAL/MIXED, artifacts ausentes pendientes sin fallback. El snapshot local V1 fue aceptado conservando 8.093 contenidos / 9.648 ocurrencias; esta comprobación de infraestructura no revalida resultados científicos.
 - **V2:** contratos opcionales para candidatos, zonas, intervalos, revisión, evidencia nativa/legacy, experimentos, recurrencia, linkage y agregación. Exportador read-only con rutas explícitas. Las revisiones de grupos supported/unsupported no confirman enlaces exactos.
-- **Docker implementado:** imagen multietapa con bases fijadas por digest, nginx, configuración runtime y snapshot montado read-only. Motor local no disponible; ejecución y health locales pendientes. Ver [DOCKER](docs/DOCKER.md).
+- **Docker validado en CI:** imagen multietapa con bases fijadas por digest, nginx, configuración runtime, Compose healthy y snapshot sintético montado read-only. Motor local no disponible; ejecución y health locales pendientes. Ver [DOCKER](docs/DOCKER.md).
 - **No conectado:** imágenes privadas, máscaras reales, APIs, ejecución de jobs, integración real M01/M03. No hay backend, autenticación ni despliegue cloud.
 - **No ejecutado:** extracción, clustering, detección de secuencias, linkage, splits, entrenamiento ni nueva ciencia. La UI no certifica eliminación de leakage ni ground truth.
 

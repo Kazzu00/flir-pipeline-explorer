@@ -47,6 +47,6 @@ In npm development the Vite middleware serves an empty config script; `VITE_DATA
 
 On the implementation workstation the Docker CLI is installed but its Linux engine is unavailable. `docker build -t flir-pipeline-explorer .` was attempted and failed to connect to the engine; `docker compose config --quiet` passed. Container startup, HTTP headers, bind-mount behavior and health must be verified with the commands above or the CI Docker job. They are not claimed as locally executed successfully.
 
-CI builds the image, starts Compose with `--wait`, checks health, SPA routing, runtime configuration and missing-runtime 404, and always tears down the container. No real artifacts or secrets are required.
+The [CI Docker job](https://github.com/Kazzu00/flir-pipeline-explorer/actions/runs/37096999192/job/111128851600) passed: image build, Compose `--wait` with healthy status, SPA routing, runtime configuration, missing-runtime 404, DEMO → REAL without rebuilding, exact synthetic snapshot transport and read-only mount inspection. It then stopped the container. No real artifacts or secrets were used. This remote result does not change the local engine limitation.
 
 References: [Docker multi-stage builds](https://docs.docker.com/build/building/multi-stage/), [nginx try_files](https://nginx.org/en/docs/http/ngx_http_core_module.html#try_files), [Node release policy](https://nodejs.org/en/about/previous-releases).

@@ -25,7 +25,7 @@ Comandos frontend: `npm run lint`, `npm run typecheck`, `npm run test`, `npm run
 
 El build conserva avisos no bloqueantes: chunk compartido ECharts de ~592 kB y script clásico `/runtime-config.js` deliberadamente externo al bundle. El snapshot real no está en `dist`; solo se produce la configuración predeterminada inocua. No se generó un nuevo snapshot privado V2 ni se ejecutaron modelos, secuencias, linkage o splits científicos. La prueba del snapshot existente verifica transporte y estructura, no resultados experimentales.
 
-CI añade imagen multietapa y Compose, health, SPA, cambio DEMO → REAL sin rebuild, snapshot sintético montado y mount read-only. El resultado remoto se registra por separado una vez ejecutado; no debe confundirse la configuración del job con una ejecución exitosa.
+El [job Docker remoto](https://github.com/Kazzu00/flir-pipeline-explorer/actions/runs/37096999192/job/111128851600) pasó: imagen multietapa y Compose healthy, SPA, cambio DEMO → REAL sin rebuild, snapshot sintético montado y mount read-only. La primera ejecución remota del exportador detectó una diferencia de `sys.path` al lanzar el ejecutable pytest; CI se alineó con `python -m pytest`, usado localmente. El estado global de CI se comprueba sobre el último commit publicado y se reporta aparte; este resultado Docker no implica que los otros jobs hayan pasado.
 
 ## Fase 2 · 2026-09-27
 
