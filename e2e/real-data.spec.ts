@@ -40,16 +40,19 @@ test('synthetic artifact flow: MIXED, persisted coordinates, both encoders and m
       .violations,
   ).toEqual([])
   const nav = page.getByRole('navigation', { name: 'Organization stages' })
-  await nav.getByRole('link', { name: 'Clustering', exact: true }).click()
+  await page.getByLabel('View', { exact: true }).selectOption('clustering')
   await expect(
     page.getByRole('heading', { name: 'clustering: pending' }),
   ).toBeVisible()
-  await nav.getByRole('link', { name: 'Splits', exact: true }).click()
+  await nav.getByRole('link', { name: 'Evaluation', exact: true }).click()
   await expect(
     page.getByRole('heading', { name: 'splits: pending' }),
   ).toBeVisible()
   await expect(page.getByRole('button', { name: 'AFTER SPLIT' })).toHaveCount(0)
-  await nav.getByRole('link', { name: 'Similarity', exact: true }).click()
+  await nav
+    .getByRole('link', { name: 'Visual exploration', exact: true })
+    .click()
+  await page.getByLabel('View', { exact: true }).selectOption('similarity')
   await expect(page.getByText(/Histogram counts are unavailable/)).toBeVisible()
   expect(await page.locator('body').innerText()).not.toMatch(
     /private_person|private-drone|C:\\Users|demo-content/,
@@ -92,6 +95,7 @@ test('9000 persisted points use canvas and a bounded content table', async ({
     }),
   ).toBeVisible()
   await expect(page.locator('canvas').first()).toBeVisible()
+  await page.getByText('Browse all contents · keyboard alternative').click()
   await page.getByLabel('Find content alias').fill('content-009000')
   await page
     .getByRole('button', { name: 'content-009000', exact: true })

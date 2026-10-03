@@ -23,16 +23,16 @@ describe('Research exploration flows', () => {
         level: 1,
       }),
     ).toBeVisible()
-    await userEvent.click(
-      screen.getByRole('link', { name: 'Dataset / manifest' }),
-    )
-    expect(await screen.findByText('Exact duplicate groups')).toBeVisible()
+    await userEvent.click(screen.getByRole('link', { name: 'Overview' }))
+    expect(
+      await screen.findByText('What data and analysis are available?'),
+    ).toBeVisible()
   })
   it('selects a cluster and preserves it when adding split metadata', async () => {
     open('/organization/clustering')
-    await screen.findByRole('heading', { name: 'Clustering' })
+    await screen.findByRole('heading', { name: 'Visual exploration', level: 1 })
     await userEvent.click(
-      screen.getByRole('button', { name: 'Cluster 00 · 22' }),
+      await screen.findByRole('button', { name: 'Cluster 00 · 22' }),
     )
     expect(
       screen.getByRole('button', { name: 'Cluster 00 · 22' }),

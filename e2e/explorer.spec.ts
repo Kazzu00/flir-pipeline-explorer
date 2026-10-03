@@ -16,8 +16,9 @@ test('home, module navigation and core clustering interaction', async ({
   await page.getByRole('link', { name: 'Explore module' }).nth(1).click()
   await page
     .getByRole('navigation', { name: 'Organization stages' })
-    .getByRole('link', { name: 'Clustering', exact: true })
+    .getByRole('link', { name: 'Visual exploration', exact: true })
     .click()
+  await page.getByLabel('View', { exact: true }).selectOption('clustering')
   await page
     .getByRole('button', { name: 'Cluster 00 · 22', exact: true })
     .click()
@@ -91,6 +92,9 @@ test('all primary and stage routes render without runtime errors', async ({
     '/organization/similarity',
     '/organization/reduction',
     '/organization/clustering',
+    '/organization/sequences',
+    '/organization/evaluation',
+    '/organization/explore',
     '/organization/groups',
     '/organization/splits',
     '/organization/detector',
@@ -113,6 +117,9 @@ test('axe smoke: primary views in both themes', async ({ page }) => {
   for (const route of [
     '/',
     '/organization/clustering',
+    '/organization/sequences',
+    '/organization/evaluation',
+    '/organization/explore',
     '/organization/splits',
     '/segmentation/predictions',
     '/experiments',
