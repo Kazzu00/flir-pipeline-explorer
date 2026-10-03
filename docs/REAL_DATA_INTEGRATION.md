@@ -5,8 +5,8 @@ Infraestructura implementada para lectura de artifacts existentes de `flir-leaka
 ```text
 Manifest + artifacts científicos existentes (read-only)
   → tools/export_leakage_snapshot.py
-  → LeakageSnapshotV1 (JSON saneado, local e ignorado)
-  → Zod: src/contracts/leakage.ts
+  → LeakageSnapshotV1 / LeakageSnapshotV2 (JSON saneado, local e ignorado)
+  → Zod: src/contracts/leakage.ts + leakage-v2.ts + research.ts
   → RealLeakageAdapter → CompositeDataAdapter
   → TanStack Query → rutas existentes de organización
 ```
@@ -29,7 +29,7 @@ uv run tools/export_leakage_snapshot.py `
   --output "public/runtime/leakage-snapshot.json"
 ```
 
-Solo `--manifest` y `--output` son obligatorios. Preferir omitir etapas ausentes. Si una ruta opcional de clustering/splitting/detection no existe, se informa su ausencia y la etapa queda pendiente. Si existe pero no valida, **falla toda la exportación**. Similarity requiere features del mismo encoder; reduction requiere ambos. Los inputs declarados de manifest/features/similarity/reduction deben existir y validar. Nunca se busca el run más reciente.
+Solo `--manifest` y `--output` son obligatorios. Preferir omitir etapas ausentes. Una etapa omitida queda pendiente. Cualquier ruta proporcionada que no exista o no valide **hace fallar toda la exportación**; no se degrada silenciosamente a pending. Similarity requiere features del mismo encoder; reduction requiere ambos. Los inputs declarados de manifest/features/similarity/reduction deben existir y validar. Nunca se busca el run más reciente.
 
 `--*-reduction` acepta un directorio de run o de benchmark. Para un run individual se exportan todas sus coordenadas sin declararlo candidato. Para un benchmark se leen únicamente los runs enumerados en su metadata y las selecciones persistidas en `candidates.csv`; se exportan métricas de todos ellos y todas las coordenadas de los candidatos declarados. No se recalcula selección, estabilidad, métricas ni reducción. Se comprueba la referencia y el checksum de metadata de cada run. Un run sin coordenadas exportadas mantiene su ficha de métricas y un estado explícito de visualización no disponible.
 
@@ -103,3 +103,40 @@ npm run test:e2e
 ```
 
 Inspección de contratos upstream: commit `e59400b4d797cff80f0eaede8997e37a2db6a4bb`, clon temporal ignorado y read-only. No se modificó `.references`. La implementación admite sus formatos, pero **no se ejecutó una exportación con artifacts privados** ni se certificó el estado de los experimentos en Hypatia. Siguiente comprobación operativa: ejecutar el exportador con las rutas explícitas del usuario y verificar el snapshot local. No se debe marcar clustering/splitting/evaluación científica como completos por la existencia de esta interfaz.
+
+## Evolución V2 y artifacts temporales
+
+Sin nuevas opciones se conserva la salida V1. `--schema-version v2` añade `research` con etapas pendientes. Proporcionar cualquier argumento nuevo selecciona V2 automáticamente. El snapshot conserva íntegramente `contents`, ocurrencias e índices V1.
+
+| Argumento                           | Input explícito admitido                                                                                                              |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `--sequences`                       | Publicación `sequence_boundary_candidates` o `sequence_instance_set`                                                                  |
+| `--sequence-experiment` (repetible) | `sequence_experiment_suite_v1` / `sequence_clustering_experiment_v1`                                                                  |
+| `--sequence-evidence` (repetible)   | Evidencia normalizada `sequence_structure_review_v1` / `sequence_external_evidence_v1`, incluida ingesta `hypatia_legacy_evidence_v1` |
+| `--linkage`                         | `labeled_video_link_candidates`, con sequence set exportado compatible                                                                |
+| `--linkage-review`                  | `labeled_visual_dependency_manual_calibration`, unido al linkage y sequence set suministrados                                         |
+| `--linkage-aggregate`               | Agregación de revisión con historial enlazado al linkage y revisión explícitos                                                        |
+| `--dataset-variant` (repetible)     | Declaración JSON de variante del mismo dataset                                                                                        |
+
+Ejemplo adicional al comando con manifest y ambos feature stores:
+
+```powershell
+# --schema-version v2
+# --sequences "<EXISTING_SEQUENCE_PUBLICATION>"
+# --sequence-experiment "<EXISTING_SUITE_PUBLICATION>"
+# --sequence-evidence "<EXISTING_NORMALIZED_EVIDENCE>"
+# --linkage "<EXISTING_LINKAGE_PUBLICATION>"
+# --linkage-review "<EXISTING_MANUAL_CALIBRATION>"
+# --linkage-aggregate "<EXISTING_REVIEW_AGGREGATE>"
+# --dataset-variant "<EXISTING_VARIANT_JSON>"
+```
+
+`tools/export_research.py` consume nombres de archivos fijos, verifica checksums de los archivos consumidos y comprueba al finalizar que no cambiaron. Verifica IDs originales de dataset/features antes de crear aliases. Sequence sets conservan cobertura completa de occurrences e intervalos; linkage mantiene todas las membresías del contenido de video y todas las occurrences etiquetadas. La identidad del dataset etiquetado se reconstruye desde las columnas de identidad de su manifest persistido, sin abrir imágenes ni labels.
+
+No se invoca `sequences verify`, `linkage verify`, fitting, imports científicos ni replay computacional. `consumed-files-validated` no equivale a verificar todos los archivos de la publicación ni sus resultados. No se abren media, contact sheets, fuentes originales de evidencia, credenciales, pesos o ZIP. El frontend tampoco interpreta archivos Parquet directamente.
+
+Los runs experimentales exportan vocabulario inspeccionado y métricas numéricas admitidas de las tablas persistidas. Campos sin una medida compatible permanecen null; no se promedian masks ni comparaciones entre runs para inventar agreement/stability global. Los límites o esquemas no soportados fallan explícitamente. La evidencia legacy de un dataset histórico no se puede unir a un manifest sampled-video distinto.
+
+Limitaciones: no imágenes; no confirmación de enlaces exactos en el productor actual; recurrencia sin score compatible conserva marcador con score null; variante como inspección de declaración, no cambio automático de población ni conclusión causal. No se ejecutó una nueva exportación con fuentes privadas. Sí se validó estructuralmente el snapshot local V1 existente; tamaño y preservación en [SNAPSHOT_PERFORMANCE](SNAPSHOT_PERFORMANCE.md).
+
+Para servir un snapshot montado en contenedor y cambiar su URL sin rebuild, ver [DOCKER](DOCKER.md).

@@ -1,22 +1,33 @@
-# Arquitectura de información
+# Information architecture · UX v2
 
-La Home prioriza el flujo: FAC aerial videos → 01 Preprocessing → 02 Representation & organization → 03 Panoptic segmentation → Global evaluation. Los números indican orden conceptual; no representan una integración ejecutada.
+M02 responde cuatro preguntas con cuatro destinos principales:
 
-Progressive disclosure: Pipeline → Module → Stage → Run/artifact/visualization. Sidebar estable con seis destinos; breadcrumbs de ubicación y pestañas por módulo. Experiments es transversal, con filtros de módulo/estado/búsqueda, ordenación y detalle de parámetros, dataset, métricas, artifacts y caveat.
+| Sección             | Ruta                       | Pregunta                                         |
+| ------------------- | -------------------------- | ------------------------------------------------ |
+| Overview            | `/organization`            | ¿Qué datos y análisis están disponibles?         |
+| Visual exploration  | `/organization/explore`    | ¿Qué contenidos se relacionan visualmente?       |
+| Sequences & linkage | `/organization/sequences`  | ¿Qué evidencia temporal y entre datasets existe? |
+| Evaluation          | `/organization/evaluation` | ¿Qué consecuencias downstream pueden evaluarse?  |
 
-## Estados
+Overview muestra conteos del snapshot, representaciones y dos ramas: estructura visual (similitud/reducción/clustering) y temporal (secuencias/experimentos/revisión). Ambas contextualizan linkage y la futura organización/evaluación; las flechas no implican que todas las etapas se hayan ejecutado ni que linkage sea un requisito de la partición histórica.
 
-`verified`, `complete`, `running`, `experimental`, `pending`, `invalid`, `unavailable`, `mock`, `inconsistent` usan texto más símbolo. `status` es lifecycle; `verification` es estado de evidencia. La fixture puede tener lifecycle complete y verification mock sin implicar ejecución real. Los módulos reflejan incertidumbre del repositorio inspeccionado; los runs representan demostraciones, no esos resultados.
+Visual exploration usa `?view=embeddings|similarity|reduction|clustering`. Los controles muestran encoder, método/representación y selección de run solo cuando hay alternativas. Las coordenadas guardadas ocupan la vista principal; el detalle de contenido y la grilla conservan selección. Los parámetros, semillas, IDs de espacios y métricas completas se abren en Technical details. El modo DEMO mantiene fixtures explícitas, separadas de artifacts.
 
-## Organización
+Sequences & linkage usa `?mode=sequences|linkage`, sin crear páginas para evidencia legacy ni agregación. Intervalos candidatos/revisados conservan vocabulario, patrón y texto. Las revisiones de grupos se muestran separadas de candidatos de enlace. Las variantes solo aparecen en detalles cuando hay más de una declaración; este selector inspecciona metadata y no cambia silenciosamente la población.
 
-- Dataset: ocurrencias frente a contenidos únicos, duplicados y cobertura de encoders.
-- Embeddings: representación matemática y coordenadas DEMO; selección enlazada a contenido/galería.
-- Similarity: distribución y pares con procedencia e índice de muestreo.
-- Reduction: método, parámetros, seed, preservación, selección explícita de candidato DEMO.
-- Clustering: un mismo run en BEFORE/AFTER; clúster y split no son intercambiables. Noise es explícito. Los runs sin split compatible no ofrecen AFTER.
-- Groups: reutiliza el explorador para bloques por fuente. No crea secuencias.
-- Splits: comparación de estrategias, conteos de ocurrencias, porcentajes y asignaciones. Histórica permite membership múltiple del contenido.
-- Detector: consumidor downstream; paneles separados para piloto de infraestructura y experimento controlado.
+Evaluation usa `?view=splits|detector`. La dependencia residual queda pendiente si no hay evidencia compatible; no se deduce desde una métrica de clustering ni desde la ausencia de duplicados.
 
-Preprocessing ofrece controles de video, índice y método, slots de imagen original/HUD/cleaned y curvas de calidad. Segmentation separa supervisión, configuración, entrenamiento, predicciones y evaluación; opacidad y layout funcionan sobre un placeholder explícito. La evaluación global presenta límites de comparabilidad sin fabricar un KPI agregado.
+## Compatibilidad
+
+| Ruta antigua (prefijo `/organization`) | Destino                                  |
+| -------------------------------------- | ---------------------------------------- |
+| `/dataset`                             | `/organization`                          |
+| `/embeddings`                          | `/organization/explore?view=embeddings`  |
+| `/similarity`                          | `/organization/explore?view=similarity`  |
+| `/reduction`                           | `/organization/explore?view=reduction`   |
+| `/clustering`                          | `/organization/explore?view=clustering`  |
+| `/groups`                              | `/organization/sequences`                |
+| `/splits`                              | `/organization/evaluation?view=splits`   |
+| `/detector`                            | `/organization/evaluation?view=detector` |
+
+Home mantiene source video → M01 → M02 → M03 → evaluación, con enlaces nativos y una bifurcación ligera dentro de M02. No enumera todas las subetapas. M01/M03 y las rutas globales conservan su alcance previo.

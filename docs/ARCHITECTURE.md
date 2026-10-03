@@ -1,20 +1,25 @@
-﻿# Arquitectura
+# Architecture · UX v2
 
-```text
-DEMO: fixture sintética → MockDataAdapter → SnapshotSchema
-REAL: artifacts M02 → exportador read-only → LeakageSnapshotV1 → Zod
-      → RealLeakageAdapter → CompositeDataAdapter (+ mock M01/M03)
-      → SnapshotSchema → TanStack Query → rutas React existentes
-```
+React components consume `useSnapshot`; unknown external data is validated by adapters and Zod. Components never parse upstream JSON/CSV/Parquet. The offline Python exporter reads explicitly supplied artifacts, checks consumed bytes and original identities, and publishes an allowlisted snapshot without executing science.
 
-Los componentes consumen `useSnapshot`; no abren Parquet, NPY, CSV ni rutas científicas. El exportador Python es una herramienta offline de transformación y validación, no un backend ni un ejecutor de ciencia. Separa los contratos upstream de la presentación. Los metadatos arbitrarios se descartan mediante listas permitidas antes de escribir el JSON.
+`RealLeakageAdapter` accepts the discriminated union LeakageSnapshotV1/V2. V2 reuses all V1 invariants before validating research extensions. `CompositeDataAdapter` keeps M01/M03 DEMO while clearing the mock M02 collections. Dataset and feature identity continuity remain mandatory; cross-dataset linkage declares a separate labeled dataset with its own occurrences.
 
-`RuntimeDataProvider` usa `VITE_DATA_MODE=demo|real` y permite cambio explícito en la UI. Los IDs de los adapters particionan la caché de Query. REAL carga el snapshot local con `AbortSignal`, `cache: no-store` y errores seguros; no usa credenciales externas. Si falla, no entrega M02 mock. El composite elimina todos los registros mock de M02, conserva los otros módulos, incorpora el dominio `leakage` y normaliza el registro de experimentos. Las rutas y el shell son los mismos en ambos modos; `ArtifactStage` presenta evidencia real sin asumir IDs, colecciones o rangos de la demo. Los widgets de gráficos, selección, métricas y paneles se comparten.
+## Domain components
 
-`Snapshot` schemaVersion=1 sigue siendo el sobre de UI; su dominio real adicional usa el discriminador independiente `LeakageSnapshotV1`. El contrato real incluye ocurrencias completas, índices por feature space, coordenadas por run, referencias upstream y orígenes explícitos. No se unen datasets ni experimentos de M01/M03 con los de M02. El indicador global es MIXED y cada run conserva su origen.
+- `DatasetOverview`: compact coverage and visual/temporal availability graph.
+- `VisualExplorer`: URL view selection and encoder controls.
+- `ArtifactStage`: small compatibility/run dispatcher; no dataset or sequence domain logic.
+- `evidence-views/ArtifactExplorer`, `SimilarityEvidence`, `SplitEvidence`, `SummaryTables`, `Pager`: independent domain rendering and bounded tables.
+- `SequenceExplorer`, `LinkageExplorer`: temporal intervals, evidence provenance, independent encoder scores and reviews.
+- `EvaluationOverview`: compatible splitting/detector evidence and explicit pending residual analysis.
+- `TechnicalDetailsDrawer`: Radix modal, focus trap, Escape and trigger-focus restoration; heavy audit content mounts only on request.
 
-Los módulos tienen imports dinámicos. React Query gestiona carga/caché; el estado local gestiona selección, filtros y BEFORE/AFTER. ECharts usa Canvas para las proyecciones de artifacts y SVG para gráficos pequeños/demo. Las coordenadas no se normalizan a rangos ficticios y no se submuestrean. Las tablas reales paginan filas; las galerías muestran seis identidades con thumbnails no disponibles, sin simular imágenes. Las ocurrencias se muestran como puntos discretos por fuente/índice de muestreo, no como intervalos de captura continuos.
+Heavy pages use React.lazy/Suspense. Query owns snapshot loading/cache; selections remain local or in URL search parameters. ECharts renders point clouds on Canvas, with no React element per point. Content/source lookups and similarity query indices are memoized; full-content projections remain intact. The sampling strip shows recorded positions, not continuous capture time. Keyboard tables are bounded and disclosed explicitly.
 
-Los assets de `public/runtime` solo se sirven localmente y se excluyen de `dist` mediante `copyPublicDir: false`. No hay despliegue, backend, autenticación, uploads, WebSockets ni control de jobs. El lote compartido de ECharts sigue generando una advertencia de tamaño de Vite; la validación de 9.000 puntos es sintética, no un benchmark general de rendimiento.
+## Static runtime
 
-Detalles operativos, límites y garantías: [REAL_DATA_INTEGRATION](REAL_DATA_INTEGRATION.md). Contratos e invariantes: [DATA_CONTRACTS](DATA_CONTRACTS.md).
+Vite development retains VITE_* compatibility. A public `window.__FLIR_CONFIG__` object takes precedence and is schema-validated. The container writes it at startup, allowing mode/URL changes without rebuilding. Invalid config fails visibly.
+
+Docker uses locked npm dependencies and digest-pinned Node/nginx base images. Only dist reaches nginx. Runtime snapshots mount read-only; `build.copyPublicDir: false` remains mandatory. No backend, uploads, credentials, scientific execution, WebSockets or cloud deployment exists. See [DOCKER](DOCKER.md).
+
+V1 is still monolithic. Fragment loading is a documented future protocol, not an implemented feature; see [SNAPSHOT_PERFORMANCE](SNAPSHOT_PERFORMANCE.md). Reference clones and all real runtime data remain ignored and read-only.

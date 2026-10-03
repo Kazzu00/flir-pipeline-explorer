@@ -4,12 +4,12 @@ Interfaz de investigación para explorar tres pipelines independientes de visió
 
 ## Estado
 
-- Implementado: Home con el pipeline completo; navegación por módulos y etapas; explorador de clustering con scatter, selección, detalles, timeline por grilla y galería; BEFORE / AFTER SPLIT; comparación de particiones; registro de experimentos; temas claro/oscuro.
-- Implementado: contratos Zod, adaptador mock, estados de carga/error/vacío, tests unitarios y pruebas Chromium/axe.
-- Implementado: exportador read-only, `LeakageSnapshotV1`, adapters real/composite, modo MIXED, proyecciones persistidas y estados pendientes sin fallback científico a mock. Validación exclusivamente sintética en esta entrega; ninguna exportación con artifacts privados ejecutada.
-- No conectado: APIs científicas, imágenes, máscaras reales, embeddings, trabajos de entrenamiento y resultados controlados. Los espacios visuales de imágenes son placeholders explícitos; las galerías permiten seleccionar identidades DEMO.
-- No ejecutado: experimentos científicos ni validación independiente de resultados upstream. La UI no certifica que un split elimine toda dependencia.
-- No desplegado: se entrega código en GitHub y ejecución local, sin servicio de hosting ni backend.
+- **Implementado:** M02 con cuatro secciones: Overview, Visual exploration, Sequences & linkage y Evaluation; Home como pipeline navegable; detalles técnicos en drawers accesibles; selección enlazada entre scatter, contenido y grilla de muestreo.
+- **Integración conservada:** V1 y V2 validados por Zod, modo REAL/MIXED, artifacts ausentes pendientes sin fallback. El snapshot local V1 fue aceptado conservando 8.093 contenidos / 9.648 ocurrencias; esta comprobación de infraestructura no revalida resultados científicos.
+- **V2:** contratos opcionales para candidatos, zonas, intervalos, revisión, evidencia nativa/legacy, experimentos, recurrencia, linkage y agregación. Exportador read-only con rutas explícitas. Las revisiones de grupos supported/unsupported no confirman enlaces exactos.
+- **Docker implementado:** imagen multietapa con bases fijadas por digest, nginx, configuración runtime y snapshot montado read-only. Motor local no disponible; ejecución y health locales pendientes. Ver [DOCKER](docs/DOCKER.md).
+- **No conectado:** imágenes privadas, máscaras reales, APIs, ejecución de jobs, integración real M01/M03. No hay backend, autenticación ni despliegue cloud.
+- **No ejecutado:** extracción, clustering, detección de secuencias, linkage, splits, entrenamiento ni nueva ciencia. La UI no certifica eliminación de leakage ni ground truth.
 
 ## Relación con los repositorios científicos
 
@@ -37,7 +37,7 @@ npm run build
 npm run preview
 ```
 
-`BrowserRouter` requiere fallback a `index.html` en un futuro servidor estático. No se ha configurado un despliegue público.
+`BrowserRouter` tiene fallback a `index.html` en nginx. No se ha realizado un despliegue público. Para contenedor local: `docker compose up -d --build --wait`; ver [DEMO y REAL/MIXED](docs/DOCKER.md).
 
 ## Stack y arquitectura
 
@@ -61,26 +61,21 @@ e2e/                          navegador y axe
 
 ## Rutas
 
-| Ruta                                                           | Vista                                                     |
-| -------------------------------------------------------------- | --------------------------------------------------------- |
-| `/`                                                            | Pipeline completo y evaluación global                     |
-| `/preprocessing`                                               | Overview del módulo                                       |
-| `/preprocessing/{frames,hud,inpainting,denoising,quality}`     | Fuentes, comparación visual, métricas                     |
-| `/organization`                                                | Overview de organización                                  |
-| `/organization/dataset`                                        | Manifest, identidades, cobertura                          |
-| `/organization/embeddings`                                     | DINOv2 / CLIP, scatter y contenido                        |
-| `/organization/similarity`                                     | Distribución, vecinos y pares                             |
-| `/organization/reduction`                                      | Comparación t-SNE / PaCMAP                                |
-| `/organization/clustering`                                     | Scatter + detalles + timeline + galería                   |
-| `/organization/groups`                                         | Mismo explorador, énfasis en procedencia/grupos           |
-| `/organization/splits`                                         | Historical, Random/content, Cluster-aware                 |
-| `/organization/detector`                                       | Piloto vs protocolo controlado downstream                 |
-| `/segmentation`                                                | Overview del módulo                                       |
-| `/segmentation/{points,model,training,predictions,evaluation}` | Supervisión, configuración, estados, overlay y evaluación |
-| `/experiments`                                                 | Tabla ordenable, filtros y detalle de run                 |
-| `/evaluation`                                                  | Familias de métricas y límites de comparación             |
+| Ruta                       | Vista                                                            |
+| -------------------------- | ---------------------------------------------------------------- |
+| `/`                        | Pipeline global navegable                                        |
+| `/organization`            | Dataset y disponibilidad de evidencia                            |
+| `/organization/explore`    | Encoder + vista de embeddings, similitud, reducción o clustering |
+| `/organization/sequences`  | Sequence structure / Cross-dataset linkage                       |
+| `/organization/evaluation` | Grouping/split, dependencia residual y detector                  |
+| `/preprocessing/:stage?`   | M01 DEMO, sin integración nueva                                  |
+| `/segmentation/:stage?`    | M03 DEMO, sin integración nueva                                  |
+| `/experiments`             | Registro y detalle de runs                                       |
+| `/evaluation`              | Evaluación global y límites                                      |
 
-En clustering, elegir un run y un clúster mediante scatter, botones o timeline. AFTER SPLIT agrega símbolos para train/validation/test sin cambiar el clúster. Solo DBSCAN tiene un split compatible en la fixture; en los otros runs el botón se deshabilita. No se inventan secuencias: la timeline usa índices de muestreo por video fuente.
+Las ocho rutas anteriores de M02 siguen funcionando mediante redirects; por ejemplo `/organization/reduction` → `/organization/explore?view=reduction`. Detalles en [INFORMATION_ARCHITECTURE](docs/INFORMATION_ARCHITECTURE.md).
+
+AFTER SPLIT solo se habilita con un split cluster-aware compatible. La grilla es **Source-video sampling grid**, no una timeline de secuencias inferidas. En REAL/MIXED no se reutilizan particiones históricas como resultados del dataset de video muestreado.
 
 ## Datos DEMO e integración local
 

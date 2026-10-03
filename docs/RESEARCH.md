@@ -27,3 +27,13 @@ Box → points → pseudo-mask, base Panoptic FCN, context fusion, training and 
 ## Integration decision
 
 Use a versioned Zod-validated frontend snapshot with explicit provenance, lifecycle, verification and nullable unavailable metrics. Adapters normalize source contracts outside UI components. No API, scientific computation, private paths, image copies, model downloads or real experiment execution belongs in this repository.
+
+## Actualización UX v2 · 2026-10-02
+
+Se inspeccionó el `main` actual de [flir-leakage-pipeline](https://github.com/Kazzu00/flir-leakage-pipeline/tree/34bd631cbff0a825b6b6ccbd7498c825a86a40ae), commit `34bd631cbff0a825b6b6ccbd7498c825a86a40ae`, en un clon temporal separado. `.references` no se modificó. Se revisaron README, status, pipeline, architecture, data_model, pipeline_traceability; runbooks sequences, sequence_operations, native_sequence_evidence, linkage, linkage_review, clustering y splitting; contratos de storage/construction/validation, experiments, linkage/review/aggregate, variants y configs. No se ejecutó código científico.
+
+Hallazgo: representación alimenta caminos visuales y temporales independientes. El segundo admite detección de candidatos, revisión confirmada, instancias, suite experimental, recurrencia y evidencia nativa. Linkage relaciona el histórico etiquetado con el dataset de video y conserva cosenos separados y todas las occurrences. Las revisiones supported/ambiguous/unsupported son por grupo, no confirmaciones exactas.
+
+`docs/status.md` reporta infraestructura de experimentos, variantes e ingesta nativa validada con fixtures; ejecución real de suite/ingesta/aggregate permanece pendiente o reportada por el responsable, no revalidada aquí. Pasajes anteriores de pipeline/README conservan un alcance histórico o un estado anterior. La UI se guía por artifacts del snapshot para disponibilidad, no convierte estas declaraciones documentales en resultados ejecutados.
+
+No se importa evidencia legacy histórica en un dataset sampled-video incompatible. No se inventan secuencias, VDGs ni splits. Diferencia de variantes no es efecto causal. Recurrencia visual no es duplicación exacta. Zonas no son cortes y revisión no es ground truth.

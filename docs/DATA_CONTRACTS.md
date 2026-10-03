@@ -42,3 +42,21 @@ JSON con `schemaVersion: "LeakageSnapshotV1"`, `dataset`, `contents`, `runs`, `e
 Los aliases son locales al snapshot, no claves científicas globales. La continuidad original se valida en el exporter antes de sustituir IDs. Estos controles no recomputan métricas ni demuestran validez experimental. La evidencia científica y la configuración completa de reproducción permanecen en los artifacts originales.
 
 La fixture `src/test/fixtures/leakage-synthetic.json` es completamente sintética y compartida con los tests Python. No es un snapshot de resultados reales. Los límites de tamaño, inputs nativos admitidos y campos no exportados se documentan en [REAL_DATA_INTEGRATION](REAL_DATA_INTEGRATION.md).
+
+## LeakageSnapshotV2
+
+`src/contracts/leakage-v2.ts` mantiene los campos V1 y todas sus invariantes, cambia únicamente el discriminador y añade `research` validado por schemas composables en `research.ts`. V1 continúa estricto: no acepta campos V2 desconocidos. La ausencia de una sección V2 se normaliza a `{ state: 'pending', artifact: null }`; un objeto presente inválido se rechaza.
+
+Estados explícitos: implemented, artifact_available, executed, verified, experimental, review_required, pending, unavailable, demo. Son declaraciones de evidencia separadas de integridad de exportación. El exporter actual no promueve publicaciones a `verified` y mantiene métricas reportadas. Un artefacto pendiente no puede contener resultados.
+
+- `sequences`: zonas/candidatos/instancias diferenciados, fuente y extremos de grilla, decisiones y referencias de revisión, recurrencia. Las instancias requieren declaración vinculada de revisión del sequence set; esto no inventa una decisión manual por intervalo. Las zonas aceptadas/rechazadas requieren revisión correspondiente.
+- `experiments`: encoder, representación, método (incluido Agglomerative experimental), cobertura, agreement/stability nullable, máscara, ablación, inmutabilidad y métricas reportadas admitidas. No hay ranking automático.
+- `evidence`: fuente native/legacy/external/manual, imported/verified/pending y canonical binding nullable. No se inventan reviewer ni fecha.
+- `linkage`: dataset etiquetado independiente, contents/occurrences etiquetados normalizados, referencias al contenido de video y a todas sus secuencias, cosenos independientes. Candidato no equivale a confirmación; el productor actual no autoriza `confirmed`.
+- `linkageReview`: evidencia por candidato cuando corresponda. `groupReview` mantiene separada la calibración real por labeled content / proposed visual dependency group con supported/unsupported/ambiguous/pending. No modifica estados de candidatos exactos.
+- `reviewAggregation`: conteos descriptivos con confirmed null, enlace al mismo linkage, sin convertir supported en precisión ni confirmación.
+- `variants`: declaraciones con identidad del mismo dataset; diferencias no establecen causalidad. El selector avanzado solo aparece cuando hay más de una.
+
+Los IDs son aliases locales al snapshot. Ningún alias crea identidad científica entre dos exportaciones. Todos los registros extra tienen vocabulario controlado y límites. Null significa unavailable, nunca cero implícito. `exportPolicy` conserva su valor V1 para el bloque común; las extensiones identifican su integridad por `consumed-files-validated`.
+
+Las fixtures `leakage-v2-synthetic.json` (producida por el exporter Python) y `research-fixture.ts` (estados de interacción) son exclusivamente sintéticas. No son evidencia de un experimento FLIR ejecutado.

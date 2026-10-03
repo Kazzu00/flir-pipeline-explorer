@@ -1,5 +1,32 @@
 # Validación local
 
+## UX V2 · 2026-10-02
+
+Infraestructura de visualización y exportación, no experimento científico. Se inspeccionó `main` upstream en `34bd631cbff0a825b6b6ccbd7498c825a86a40ae` mediante clon temporal read-only; `.references` no se modificó.
+
+| Comprobación            | Resultado observado                                                                                                  |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| ESLint / TypeScript     | PASS                                                                                                                 |
+| Vitest                  | PASS, 41 tests en 4 archivos                                                                                         |
+| Exportador / pytest     | PASS, 23 tests sintéticos y offline                                                                                  |
+| Ruff check / format     | PASS, versión fijada 0.16.9                                                                                          |
+| Build / Prettier        | PASS                                                                                                                 |
+| Playwright Chromium     | PASS, 12 pruebas, incluidos axe en nuevas vistas, ambos temas, teclado y redirects                                   |
+| Volumen sintético       | 9.000 puntos en Canvas; tabla acotada y búsqueda de identidad                                                        |
+| Compatibilidad V1 local | Snapshot existente aceptado: 8.093 contenidos, 9.648 ocurrencias, 40 runs; lectura sin modificaciones                |
+| V2                      | Fixture Python/Zod compartida; datasets, revisiones, cobertura, linkage, checksums y errores de artifacts explícitos |
+| CLI                     | `uv run tools/export_leakage_snapshot.py --help` incluye opciones V2                                                 |
+| Docker Compose          | `docker compose config --quiet`: PASS                                                                                |
+| Docker local            | Build intentado; engine Linux no disponible. Arranque y health locales pendientes                                    |
+
+Se revisaron visualmente Home, reducción y secuencias; screenshots y traces quedan ignorados. El drawer captura/restaura foco y responde a Escape. Las zonas candidatas y revisadas tienen texto y patrones además de color. Axe es una comprobación automatizada, no certificación WCAG ni auditoría completa con lector de pantalla.
+
+Comandos frontend: `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`, `npm run format:check`, `npm run test:e2e`. Python: `uvx ruff==0.16.9 check tools`, `uvx ruff==0.16.9 format --check tools` y `uv run --with numpy==2.2.6 --with pandas==2.2.3 --with pyarrow==20.0.0 --with pytest==8.4.2 python -m pytest tools/tests -q`. Se usa `python -m pytest` porque la política local de Windows bloquea el ejecutable pytest del entorno temporal.
+
+El build conserva avisos no bloqueantes: chunk compartido ECharts de ~592 kB y script clásico `/runtime-config.js` deliberadamente externo al bundle. El snapshot real no está en `dist`; solo se produce la configuración predeterminada inocua. No se generó un nuevo snapshot privado V2 ni se ejecutaron modelos, secuencias, linkage o splits científicos. La prueba del snapshot existente verifica transporte y estructura, no resultados experimentales.
+
+CI añade imagen multietapa y Compose, health, SPA, cambio DEMO → REAL sin rebuild, snapshot sintético montado y mount read-only. El resultado remoto se registra por separado una vez ejecutado; no debe confundirse la configuración del job con una ejecución exitosa.
+
 ## Fase 2 · 2026-09-27
 
 Infraestructura de lectura de artifacts probada exclusivamente con datos sintéticos. No se accedió a artifacts privados ni se ejecutaron experimentos científicos.
