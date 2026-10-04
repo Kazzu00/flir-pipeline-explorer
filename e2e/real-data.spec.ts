@@ -45,6 +45,9 @@ test('synthetic artifact flow: MIXED, persisted coordinates, both encoders and m
     page.getByRole('heading', { name: 'clustering: pending' }),
   ).toBeVisible()
   await nav.getByRole('link', { name: 'Evaluation', exact: true }).click()
+  // Evaluation now opens the independent detector contract; the sampled-video
+  // grouping view still preserves its own pending state without synthetic fallback.
+  await page.getByLabel('Evaluation evidence').selectOption('splits')
   await expect(
     page.getByRole('heading', { name: 'splits: pending' }),
   ).toBeVisible()
