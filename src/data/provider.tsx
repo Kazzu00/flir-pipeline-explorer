@@ -65,11 +65,12 @@ export function DataModeSwitch() {
 export const DataAdapterContext = createContext<DataAdapter>(
   new MockDataAdapter(),
 )
-export function useSnapshot() {
+export function useSnapshot(enabled = true) {
   const adapter = useContext(DataAdapterContext)
   return useQuery({
     queryKey: ['snapshot', adapter.id],
     queryFn: ({ signal }) => adapter.getSnapshot(signal),
     staleTime: Infinity,
+    enabled,
   })
 }

@@ -4,15 +4,14 @@ import { Select, Notice } from '@/components/feedback/Primitives'
 import { EmptyArtifactState } from '@/components/research/Evidence'
 import { ArtifactStage } from './ArtifactStage'
 import { Splits } from './splitting/Splits'
-import { Detector } from './detector/Detector'
+import { DetectionEvaluation } from '@/features/detection/DetectionEvaluation'
 export function EvaluationOverview() {
-  const { data } = useSnapshot()
   const [params, setParams] = useSearchParams()
-  const view = params.get('view') === 'detector' ? 'detector' : 'splits'
+  const view = params.get('view') === 'splits' ? 'splits' : 'detector'
+  const { data } = useSnapshot(view === 'splits')
   return (
     <>
-      <h2>What consequences does this organization have downstream?</h2>
-      <div className="toolbar">
+      <div className="toolbar detection-view-selector">
         <Select
           label="Evaluation evidence"
           value={view}
@@ -23,20 +22,22 @@ export function EvaluationOverview() {
           ]}
         />
       </div>
-      {data?.leakage ? (
+      {view === 'detector' ? (
+        <DetectionEvaluation />
+      ) : data?.leakage ? (
         <ArtifactStage key={view} snapshot={data.leakage} stage={view} />
-      ) : view === 'splits' ? (
-        <Splits />
       ) : (
-        <Detector />
+        <Splits />
       )}
-      {data?.leakage && (
+      {view === 'splits' && data?.leakage && (
         <EmptyArtifactState stage="Residual dependency / similarity" />
       )}
-      <Notice>
-        Historical partitions are not sampled-video partitions. Dataset variant
-        differences do not establish causal effects.
-      </Notice>
+      {view === 'splits' && (
+        <Notice>
+          Historical partitions are not sampled-video partitions. Dataset
+          variant differences do not establish causal effects.
+        </Notice>
+      )}
     </>
   )
 }

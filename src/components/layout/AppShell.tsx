@@ -17,15 +17,24 @@ import {
 import { Button } from '@/components/ui/button'
 import { nav } from '@/app/navigation'
 import { useSnapshot, DataModeSwitch } from '@/data/provider'
+import { isDetectionRoute } from '@/features/detection/route'
+import { useDetectionSnapshot } from '@/features/detection/query'
 const icons = [Network, Layers, GitBranch, Box, FlaskConical, Activity]
 export function AppShell() {
-  const { data } = useSnapshot()
-  const mixed = !!data?.leakage
   const [open, setOpen] = useState(false)
   const [light, setLight] = useState(
     () => localStorage.getItem('flir-theme') === 'light',
   )
   const location = useLocation()
+  const detector = isDetectionRoute(location.pathname, location.search)
+  const { data } = useSnapshot(!detector)
+  const mixed = !!data?.leakage
+  const detection = useDetectionSnapshot(detector)
+  const detectorMode = detection.error
+    ? 'UNAVAILABLE'
+    : detection.data
+      ? 'REAL / VERIFIED'
+      : 'LOADING'
   const mainRef = useRef<HTMLElement>(null)
   useEffect(() => {
     const dismiss = (event: KeyboardEvent) => {
@@ -81,10 +90,18 @@ export function AppShell() {
         <div className="sidebar-bottom">
           <div className="side-note">
             <span className="status status-mock">
-              {mixed ? 'MIXED WORKSPACE' : '◈ DEMO WORKSPACE'}
+              {detector
+                ? 'M02 DETECTOR CONTRACT'
+                : mixed
+                  ? 'MIXED WORKSPACE'
+                  : '◈ DEMO WORKSPACE'}
             </span>
             <p>
-              {mixed ? 'M02 local artifacts.' : 'Synthetic data.'}
+              {detector
+                ? 'Other modules retain their own data modes.'
+                : mixed
+                  ? 'M02 local artifacts.'
+                  : 'Synthetic data.'}
               <br />
               Real research boundaries.
             </p>
@@ -128,12 +145,14 @@ export function AppShell() {
             </span>
           </nav>
           <div className="header-actions">
-            <DataModeSwitch />
+            {!detector && <DataModeSwitch />}
             <span className="local-status">
               <span />
-              {mixed
-                ? 'Artifact + mock adapters · local'
-                : 'Mock adapter · local'}
+              {detector
+                ? 'Detector export · presentation only'
+                : mixed
+                  ? 'Artifact + mock adapters · local'
+                  : 'Mock adapter · local'}
             </span>
             <Button
               variant="ghost"
@@ -148,10 +167,12 @@ export function AppShell() {
           </div>
         </header>
         <div className="demo-bar">
-          <span>{mixed ? 'MIXED' : 'DEMO'}</span>
-          {mixed
-            ? 'Module 02: local artifacts. Modules 01 and 03: DEMO. Missing stages remain pending.'
-            : 'All displayed collections, runs and numeric metrics are synthetic. Repository evidence is labeled separately.'}
+          <span>{detector ? detectorMode : mixed ? 'MIXED' : 'DEMO'}</span>
+          {detector
+            ? 'Detector contract only. Scientific computation and verification upstream. Modules 01 and 03 remain DEMO.'
+            : mixed
+              ? 'Module 02: local artifacts. Modules 01 and 03: DEMO. Missing stages remain pending.'
+              : 'All displayed collections, runs and numeric metrics are synthetic. Repository evidence is labeled separately.'}
         </div>
         <main id="main" tabIndex={-1} ref={mainRef}>
           <Outlet />

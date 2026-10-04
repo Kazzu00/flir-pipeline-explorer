@@ -270,7 +270,7 @@ const detector = {
     metric(name, null),
   ),
   caveat:
-    'Controlled experiment pending. Upstream small CPU pilots validate infrastructure only.',
+    'DEMO protocol placeholder only. The verified historical controlled comparison uses a separate contract under Evaluation.',
 }
 export const fixture = {
   schemaVersion: 1,
@@ -309,7 +309,7 @@ export const fixture = {
       status: 'experimental',
       repository: 'https://github.com/Kazzu00/flir-leakage-pipeline',
       evidence:
-        'Historical pipeline implemented; sampled-video downstream and controlled detector evaluation pending.',
+        'DEMO organization fixture. Sampled-video downstream is separate from the historical detector contract under Evaluation.',
       stages: [
         ['dataset', 'Canonical manifest', 'Occurrence ↔ content mapping'],
         ['embeddings', 'DINOv2 / CLIP', 'Raw + L2 embeddings'],

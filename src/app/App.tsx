@@ -1,4 +1,11 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  useLocation,
+} from 'react-router-dom'
+import { isDetectionRoute } from '@/features/detection/route'
 import { lazy, Suspense } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AppShell } from '@/components/layout/AppShell'
@@ -32,14 +39,16 @@ import {
 import { SnapshotError } from '@/data/adapters/RealLeakageAdapter'
 const client = new QueryClient({ defaultOptions: { queries: { retry: 1 } } })
 function DataGate() {
-  const { isPending, error, refetch } = useSnapshot()
-  if (isPending)
+  const location = useLocation()
+  const detector = isDetectionRoute(location.pathname, location.search)
+  const { isPending, error, refetch } = useSnapshot(!detector)
+  if (isPending && !detector)
     return (
       <p className="empty" role="status">
         Loading research workspace…
       </p>
     )
-  if (error)
+  if (error && !detector)
     return (
       <div className="empty" role="alert">
         <h1>Data could not be validated</h1>

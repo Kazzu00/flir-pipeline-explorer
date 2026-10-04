@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom'
 import { PageTitle, Panel, Notice } from '@/components/feedback/Primitives'
 import { Status } from '@/components/feedback/Status'
 import { useSnapshot } from '@/data/provider'
+import { useDetectionSnapshot } from '@/features/detection/query'
 export function Evaluation() {
   const { data } = useSnapshot()
+  const detector = useDetectionSnapshot()
   return (
     <>
       <PageTitle
@@ -57,7 +59,13 @@ export function Evaluation() {
                 <td>Downstream detector</td>
                 <td>Precision / Recall / mAP@50 / mAP@50–95</td>
                 <td>
-                  <Status state="pending" />
+                  <span>
+                    {detector.data
+                      ? 'REAL / VERIFIED · upstream contract'
+                      : detector.isPending
+                        ? 'Loading detector contract'
+                        : 'Verified results unavailable'}
+                  </span>
                 </td>
                 <td>
                   <Link className="row-link" to="/organization/detector">
