@@ -24,3 +24,10 @@ This repository is the independent frontend `flir-pipeline-explorer`. Scientific
 - Run `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`; run `npm run test:e2e` for UI changes. Fix failures; report anything not executed.
 - Before committing or pushing inspect `git status`, `git diff`, `git diff --cached` and tracked files. Commit logical changes; keep generated outputs ignored.
 - Do not modify or delete other repositories. No deployment, live API, or experimental result may be described as completed unless executed and verified.
+
+## Explicit detector-contract exception · 2026-10-04
+
+- The user authorized checking in only the public `detection-export-v1` JSON contract under `src/features/detection/snapshot/`. This narrow exception includes the upstream schema and aggregate/run/support/bootstrap outputs; it does not permit images, native artifacts or general runtime snapshots.
+- `useDetectionSnapshot` is the canonical detector adapter/query boundary. It is independent of `useSnapshot` and workspace DEMO/MIXED selection; components never parse JSON or recompute science.
+- Preserve upstream bytes/checksums and the distinction between publication commit and generator `source_commit`. Update through `npm run sync:detection`; see `docs/DETECTION_CONTRACT.md`.
+- The approved detector contract is emitted as hash-named static assets. `build.copyPublicDir: false` and ignored `public/runtime/` remain unchanged. Keep detector failure states explicit with no demo fallback.
