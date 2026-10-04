@@ -15,7 +15,7 @@ Visual exploration usa `?view=embeddings|similarity|reduction|clustering`. Los c
 
 Sequences & linkage usa `?mode=sequences|linkage`, sin crear páginas para evidencia legacy ni agregación. Intervalos candidatos/revisados conservan vocabulario, patrón y texto. Las revisiones de grupos se muestran separadas de candidatos de enlace. Las variantes solo aparecen en detalles cuando hay más de una declaración; este selector inspecciona metadata y no cambia silenciosamente la población.
 
-Evaluation usa `?view=splits|detector`. La dependencia residual queda pendiente si no hay evidencia compatible; no se deduce desde una métrica de clustering ni desde la ausencia de duplicados.
+Evaluation usa `?view=splits|detector` y abre el detector por defecto. El contrato público verificado `detection-export-v1` presenta comparación, variabilidad, clases, composición de test y asociaciones exportadas, con procedencia/limitaciones/runs en drawers. Es independiente del snapshot sampled-video y de su selector DEMO/MIXED. La vista `splits` conserva su estado pendiente cuando no existe evidencia compatible; no se deduce dependencia residual desde una métrica de clustering ni desde la ausencia de duplicados. Ver [DETECTION_CONTRACT](DETECTION_CONTRACT.md).
 
 ## Compatibilidad
 

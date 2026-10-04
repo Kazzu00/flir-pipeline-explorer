@@ -1,5 +1,11 @@
 # Repository inspection · 2026-09-26
 
+## Detector contract update · 2026-10-04
+
+Inspected and imported the public `exports/frontend/detection/` contract from `flir-leakage-pipeline`, branch `feat/hypatia-detector-final-report`, publication commit `0a4ea1f`. Its manifest declares a completed controlled descriptive comparison: 48/48 detector runs, 16 splits, four strategies, three detector seeds, `scientific_result=true` and `generated_from_verified_artifacts=true`. The generator source commit is separately `18d61b35e4c82f41b0c9092e997fb9088f7a10f5`. All ten manifest-declared file hashes were checked. No native artifacts were inspected and no upstream scientific code was executed.
+
+This supersedes the older pending-detector statement below **only for this exported historical controlled comparison**. It does not establish sampled-video detector results, temporal ground truth, causal leakage effects, or completion of unrelated upstream stages. `/organization/evaluation` presents these exported values and limitations. See [DETECTION_CONTRACT](DETECTION_CONTRACT.md).
+
 Read-only shallow clones under `.references/`; no scientific code executed, no source images or artifacts imported. These snapshots are evidence for interface vocabulary, not independent validation of scientific results.
 
 | Repository                                                                                          | Inspected commit                           | Evidence                                                                                                    |

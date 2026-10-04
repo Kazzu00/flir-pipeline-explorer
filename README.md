@@ -1,8 +1,10 @@
 # FLIR Pipeline Explorer
 
-Interfaz de investigación para explorar tres pipelines independientes de visión por computador sobre video aéreo de la Amazonía colombiana. **DEMO por defecto; M02 admite snapshots locales de artifacts existentes. No ejecuta procesamiento científico.**
+Interfaz de investigación para explorar tres pipelines independientes de visión por computador sobre video aéreo de la Amazonía colombiana. **DEMO por defecto en el workspace; la evaluación del detector M02 utiliza el contrato REAL / VERIFIED de Hypatia. M02 también admite snapshots locales. No ejecuta procesamiento científico.**
 
 ## Estado
+
+- **Detector conectado:** `/organization/evaluation` presenta el contrato público `detection-export-v1`, publicación upstream `0a4ea1f`: 48/48 runs, 16 splits, cuatro estrategias y siete asociaciones preespecificadas. Finalización y verificación reportadas upstream; validación de integridad aquí. Comparación descriptiva, no causal. [Contrato, procedencia y actualización](docs/DETECTION_CONTRACT.md).
 
 - **Implementado:** M02 con cuatro secciones: Overview, Visual exploration, Sequences & linkage y Evaluation; Home como pipeline navegable; detalles técnicos en drawers accesibles; selección enlazada entre scatter, contenido y grilla de muestreo.
 - **Integración conservada:** V1 y V2 validados por Zod, modo REAL/MIXED, artifacts ausentes pendientes sin fallback. El snapshot local V1 fue aceptado conservando 8.093 contenidos / 9.648 ocurrencias; esta comprobación de infraestructura no revalida resultados científicos.
@@ -83,7 +85,7 @@ La fixture contiene **144 contenidos sintéticos, 156 ocurrencias, 12 grupos de 
 
 `DataAdapter.getSnapshot(signal)` devuelve un snapshot validado. `DataAdapterContext` permite sustituir el adaptador. `RealLeakageAdapter` consume JSON saneado; `CompositeDataAdapter` integra M02 y conserva M01/M03 en DEMO, con indicador MIXED. No existe `APIDataAdapter`, endpoint científico ni acceso desde React a archivos upstream. Las etapas reales ausentes quedan pendientes.
 
-Consultar [REAL_DATA_INTEGRATION](docs/REAL_DATA_INTEGRATION.md) para generar el snapshot con rutas explícitas de manifest, DINOv2/CLIP, similarity v2 y reduction. El exporter acepta runs opcionales de clustering/split/detector compatibles; no ejecuta esas etapas. Los artifacts reales nunca se versionan y `public/runtime` no se copia a `dist`.
+Consultar [REAL_DATA_INTEGRATION](docs/REAL_DATA_INTEGRATION.md) para generar el snapshot con rutas explícitas de manifest, DINOv2/CLIP, similarity v2 y reduction. El exporter acepta runs opcionales de clustering/split/detector compatibles; no ejecuta esas etapas. Los artifacts locales nunca se versionan y `public/runtime` no se copia a `dist`. La única excepción autorizada es el contrato público ligero del detector en `src/features/detection/snapshot/`, independiente del snapshot de video. Se actualiza con `npm run sync:detection -- --repo <pipeline-repo>`; no requiere tener upstream para ejecutar la aplicación.
 
 Tras generar `public/runtime/leakage-snapshot.json`:
 
@@ -109,8 +111,8 @@ npm run test:e2e
 npm run format:check
 ```
 
-Tests sintéticos, sin FLIR, modelos, GPU o red en la ejecución de tests. La instalación inicial de npm/Chromium requiere descargar dependencias públicas. Las capturas y reportes quedan ignorados en `test-results/` y `playwright-report/`. CI ejecuta las mismas comprobaciones. Axe es un smoke automatizado, no una certificación de WCAG/ISO ni una auditoría exhaustiva con tecnologías de asistencia.
+Tests sintéticos y validación del contrato público ligero versionado del detector, sin imágenes FLIR, modelos, GPU o red en la ejecución de tests. La instalación inicial de npm/Chromium requiere descargar dependencias públicas. Las capturas y reportes quedan ignorados en `test-results/` y `playwright-report/`. CI ejecuta las mismas comprobaciones. Axe es un smoke automatizado, no una certificación de WCAG/ISO ni una auditoría exhaustiva con tecnologías de asistencia.
 
 ## Seguridad y alcance
 
-No se versionan `.references`, `.env*`, datasets, archivos FLIR, pesos, cachés, reportes ejecutados ni artifacts científicos. Los repositorios científicos permanecen independientes. No se implementan algoritmos de ciencia de datos en este frontend; transformar fixtures para la visualización no equivale a ejecutar experimentos.
+No se versionan `.references`, `.env*`, datasets, archivos FLIR, pesos, cachés, reportes ejecutados ni artifacts nativos. Solo se incluye el contrato público del detector expresamente autorizado y documentado. Los repositorios científicos permanecen independientes. No se implementan algoritmos de ciencia de datos en este frontend; visualizar exports no equivale a ejecutar o revalidar experimentos.
