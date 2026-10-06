@@ -135,14 +135,33 @@ export function OrganizationLinkageExplorer() {
         />
 
         <div className="linkage-list">
-          {visible.map((candidate) => (
-            <CandidateRow
-              key={candidate.candidate_id}
-              candidate={candidate}
-              selected={selected?.candidate_id === candidate.candidate_id}
-              onSelect={() => setSelectedId(candidate.candidate_id)}
-            />
-          ))}
+          {visible.map((candidate) => {
+            const isSelected =
+              selected?.candidate_id === candidate.candidate_id
+
+            return (
+              <div className="linkage-item" key={candidate.candidate_id}>
+                <CandidateRow
+                  candidate={candidate}
+                  selected={isSelected}
+                  onSelect={() =>
+                    setSelectedId(isSelected ? '' : candidate.candidate_id)
+                  }
+                />
+
+                {isSelected && selected && (
+                  <SelectedCandidateDetail
+                    candidate={selected}
+                    previews={selectedPreviews}
+                    contentsPending={contentsQuery.isPending}
+                    mediaPending={mediaQuery.isPending}
+                    contentsError={contentsQuery.isError}
+                    mediaError={mediaQuery.isError}
+                  />
+                )}
+              </div>
+            )
+          })}
         </div>
 
         <Pager
@@ -153,95 +172,114 @@ export function OrganizationLinkageExplorer() {
         />
       </Panel>
 
-      {selected && (
-        <Panel
-          title="Selected candidate"
-          meta={`ID · ${selected.candidate_id}`}
-        >
-          <MetricSummary
-            items={[
-              {
-                label: 'CLIP cosine',
-                value: formatScore(selected.clip_cosine),
-              },
-              {
-                label: 'DINOv2 cosine',
-                value: formatScore(selected.dinov2_cosine),
-              },
-              {
-                label: 'Mean reciprocal rank',
-                value: formatScore(selected.mean_reciprocal_rank),
-              },
-              {
-                label: 'Evidence agreement',
-                value: selected.both_topk
-                  ? 'Both top-k'
-                  : selected.clip_topk
-                    ? 'CLIP top-k only'
-                    : selected.dinov2_topk
-                      ? 'DINOv2 top-k only'
-                      : 'Outside both top-k flags',
-              },
-            ]}
-          />
-
-          {contentsQuery.isPending || mediaQuery.isPending ? (
-            <p className="panel-body" role="status">
-              Loading selected previews…
-            </p>
-          ) : contentsQuery.isError || mediaQuery.isError ? (
-            <Notice>
-              Preview metadata could not be loaded. Candidate scores and IDs
-              remain available.
-            </Notice>
-          ) : selectedPreviews ? (
-            <div
-              className="panel-body"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '1rem',
-              }}
-            >
-              <PreviewFigure
-                label="Labeled content"
-                evidence={selectedPreviews.labeled}
-              />
-              <PreviewFigure
-                label="Video content"
-                evidence={selectedPreviews.video}
-              />
-            </div>
-          ) : null}
-
-          <div className="panel-body">
-            <p>
-              <strong>Labeled content:</strong>{' '}
-              <code>{selected.labeled_content_id}</code>
-            </p>
-            <p>
-              <strong>Video content:</strong>{' '}
-              <code>{selected.video_content_id}</code>
-            </p>
-            <p>
-              Upstream evidence reports {selected.video_occurrence_count}{' '}
-              video occurrence
-              {selected.video_occurrence_count === 1 ? '' : 's'} and{' '}
-              {selected.video_sequence_count} sequence count
-              {selected.video_sequence_count === 1 ? '' : 's'} for this video
-              content. These counts do not identify or confirm a particular
-              sequence.
-            </p>
-          </div>
-
-          <TechnicalDetailsDrawer>
-            <pre className="audit-json">
-              {JSON.stringify(selected, null, 2)}
-            </pre>
-          </TechnicalDetailsDrawer>
-        </Panel>
-      )}
     </>
+  )
+}
+
+function SelectedCandidateDetail({
+  candidate,
+  previews,
+  contentsPending,
+  mediaPending,
+  contentsError,
+  mediaError,
+}: {
+  candidate: OrganizationCandidatePair
+  previews: {
+    labeled: PreviewEvidence
+    video: PreviewEvidence
+  } | null
+  contentsPending: boolean
+  mediaPending: boolean
+  contentsError: boolean
+  mediaError: boolean
+}) {
+  return (
+    <Panel
+      title="Selected candidate"
+      meta={`ID · ${candidate.candidate_id}`}
+    >
+      <MetricSummary
+        items={[
+          {
+            label: 'CLIP cosine',
+            value: formatScore(candidate.clip_cosine),
+          },
+          {
+            label: 'DINOv2 cosine',
+            value: formatScore(candidate.dinov2_cosine),
+          },
+          {
+            label: 'Mean reciprocal rank',
+            value: formatScore(candidate.mean_reciprocal_rank),
+          },
+          {
+            label: 'Evidence agreement',
+            value: candidate.both_topk
+              ? 'Both top-k'
+              : candidate.clip_topk
+                ? 'CLIP top-k only'
+                : candidate.dinov2_topk
+                  ? 'DINOv2 top-k only'
+                  : 'Outside both top-k flags',
+          },
+        ]}
+      />
+
+      {contentsPending || mediaPending ? (
+        <p className="panel-body" role="status">
+          Loading selected previews…
+        </p>
+      ) : contentsError || mediaError ? (
+        <Notice>
+          Preview metadata could not be loaded. Candidate scores and IDs remain
+          available.
+        </Notice>
+      ) : previews ? (
+        <div
+          className="panel-body"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: '1rem',
+          }}
+        >
+          <PreviewFigure
+            label="Labeled content"
+            evidence={previews.labeled}
+          />
+          <PreviewFigure
+            label="Video content"
+            evidence={previews.video}
+          />
+        </div>
+      ) : null}
+
+      <div className="panel-body">
+        <p>
+          <strong>Labeled content:</strong>{' '}
+          <code>{candidate.labeled_content_id}</code>
+        </p>
+        <p>
+          <strong>Video content:</strong>{' '}
+          <code>{candidate.video_content_id}</code>
+        </p>
+        <p>
+          Upstream evidence reports {candidate.video_occurrence_count} video
+          occurrence{candidate.video_occurrence_count === 1 ? '' : 's'} and{' '}
+          {candidate.video_sequence_count} sequence count
+          {candidate.video_sequence_count === 1 ? '' : 's'} for this video
+          content. These counts do not identify or confirm a particular
+          sequence.
+        </p>
+      </div>
+
+      <TechnicalDetailsDrawer>
+        <pre className="audit-json">
+          {JSON.stringify(candidate, null, 2)}
+        </pre>
+      </TechnicalDetailsDrawer>
+    </Panel>
   )
 }
 

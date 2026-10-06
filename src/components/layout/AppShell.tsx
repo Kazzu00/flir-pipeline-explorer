@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom'
 import {
   Activity,
@@ -27,7 +27,9 @@ export function AppShell() {
   )
   const location = useLocation()
   const detector = isDetectionRoute(location.pathname, location.search)
-  const { data } = useSnapshot(!detector)
+  const organizationEvidence =
+    location.pathname === '/organization/sequences'
+  const { data } = useSnapshot(!detector && !organizationEvidence)
   const mixed = !!data?.leakage
   const detection = useDetectionSnapshot(detector)
   const detectorMode = detection.error
@@ -49,7 +51,7 @@ export function AppShell() {
   }, [light])
   useEffect(() => {
     mainRef.current?.focus({ preventScroll: true })
-    document.title = `${location.pathname === '/' ? 'Pipeline overview' : location.pathname.split('/').filter(Boolean).join(' / ')} · FLIR Explorer`
+    document.title = `${location.pathname === '/' ? 'Pipeline overview' : location.pathname.split('/').filter(Boolean).join(' / ')} Â· FLIR Explorer`
   }, [location.pathname])
   return (
     <div className="app-shell">
@@ -90,18 +92,22 @@ export function AppShell() {
         <div className="sidebar-bottom">
           <div className="side-note">
             <span className="status status-mock">
-              {detector
-                ? 'M02 DETECTOR CONTRACT'
-                : mixed
-                  ? 'MIXED WORKSPACE'
-                  : '◈ DEMO WORKSPACE'}
+              {organizationEvidence
+                ? 'M02 REAL EVIDENCE'
+                : detector
+                  ? 'M02 DETECTOR CONTRACT'
+                  : mixed
+                    ? 'MIXED WORKSPACE'
+                    : '◈ DEMO WORKSPACE'}
             </span>
             <p>
-              {detector
-                ? 'Other modules retain their own data modes.'
-                : mixed
-                  ? 'M02 local artifacts.'
-                  : 'Synthetic data.'}
+              {organizationEvidence
+                ? 'organization-evidence-v2 · verified local export.'
+                : detector
+                  ? 'Other modules retain their own data modes.'
+                  : mixed
+                    ? 'M02 local artifacts.'
+                    : 'Synthetic data.'}
               <br />
               Real research boundaries.
             </p>
@@ -145,14 +151,16 @@ export function AppShell() {
             </span>
           </nav>
           <div className="header-actions">
-            {!detector && <DataModeSwitch />}
+            {!detector && !organizationEvidence && <DataModeSwitch />}
             <span className="local-status">
               <span />
-              {detector
-                ? 'Detector export · presentation only'
-                : mixed
-                  ? 'Artifact + mock adapters · local'
-                  : 'Mock adapter · local'}
+              {organizationEvidence
+                ? 'organization-evidence-v2 · verified export'
+                : detector
+                  ? 'Detector export · presentation only'
+                  : mixed
+                    ? 'Artifact + mock adapters · local'
+                    : 'Mock adapter · local'}
             </span>
             <Button
               variant="ghost"
@@ -167,21 +175,24 @@ export function AppShell() {
           </div>
         </header>
         <div className="demo-bar">
-          <span>{detector ? detectorMode : mixed ? 'MIXED' : 'DEMO'}</span>
-          {detector
-            ? 'Detector contract only. Scientific computation and verification upstream. Modules 01 and 03 remain DEMO.'
-            : mixed
-              ? 'Module 02: local artifacts. Modules 01 and 03: DEMO. Missing stages remain pending.'
-              : 'All displayed collections, runs and numeric metrics are synthetic. Repository evidence is labeled separately.'}
+          <span>{organizationEvidence ? 'REAL / VERIFIED' : detector ? detectorMode : mixed ? 'MIXED' : 'DEMO'}</span>
+          {organizationEvidence
+            ? 'Module 02 sequence and linkage evidence comes from organization-evidence-v2. Stored artifacts are presented without scientific recomputation in the frontend.'
+            : detector
+              ? 'Detector contract only. Scientific computation and verification upstream. Modules 01 and 03 remain DEMO.'
+              : mixed
+                ? 'Module 02: local artifacts. Modules 01 and 03: DEMO. Missing stages remain pending.'
+                : 'All displayed collections, runs and numeric metrics are synthetic. Repository evidence is labeled separately.'}
         </div>
         <main id="main" tabIndex={-1} ref={mainRef}>
           <Outlet />
         </main>
         <footer>
           FLIR RESEARCH WORKSPACE{' '}
-          <span>Visualization only · no scientific processing</span>
+          <span>Visualization only Â· no scientific processing</span>
         </footer>
       </div>
     </div>
   )
 }
+
