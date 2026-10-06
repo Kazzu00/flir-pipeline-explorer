@@ -1,6 +1,5 @@
 ﻿import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useSnapshot } from '@/data/provider'
 import {
   useOrganizationBoundaryZones,
   useOrganizationTimelines,
@@ -15,22 +14,12 @@ import {
   MetricSummary,
 } from '@/components/research/Evidence'
 import { TechnicalDetailsDrawer } from '@/components/research/TechnicalDetailsDrawer'
-import { LinkageExplorer } from './LinkageExplorer'
+import { OrganizationLinkageExplorer } from './OrganizationLinkageExplorer'
 import { Pager } from './evidence-views/Pager'
 
 export function SequenceExplorer() {
   const [params, setParams] = useSearchParams()
   const linkage = params.get('mode') === 'linkage'
-
-  // Keep the legacy snapshot disabled unless the user explicitly opens
-  // the linkage compatibility view. The temporal view uses evidence-v2.
-  const legacySnapshot = useSnapshot(linkage)
-
-  const research =
-    linkage &&
-    legacySnapshot.data?.leakage?.schemaVersion === 'LeakageSnapshotV2'
-      ? legacySnapshot.data.leakage.research
-      : undefined
 
   return (
     <>
@@ -51,20 +40,7 @@ export function SequenceExplorer() {
         </div>
       </div>
 
-      {linkage ? (
-        legacySnapshot.isError ? (
-          <Notice>
-            The legacy linkage snapshot is unavailable. Temporal evidence remains
-            available from organization-evidence-v2.
-          </Notice>
-        ) : legacySnapshot.isPending ? (
-          <p role="status">Loading linkage evidence…</p>
-        ) : (
-          <LinkageExplorer research={research} />
-        )
-      ) : (
-        <TemporalEvidence />
-      )}
+      {linkage ? <OrganizationLinkageExplorer /> : <TemporalEvidence />}
     </>
   )
 }
@@ -359,3 +335,4 @@ function timelineLabel(timeline: OrganizationTimeline) {
 
   return `${identity} · ${timeline.temporal_source.replaceAll('_', ' ')}`
 }
+
