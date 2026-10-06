@@ -1,25 +1,37 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useSnapshot } from '@/data/provider'
+import {
+  useOrganizationBoundaryZones,
+  useOrganizationTimelines,
+} from '@/data/organization-provider'
+import type {
+  OrganizationBoundaryZone,
+  OrganizationTimeline,
+} from '@/contracts/organization-evidence-v2'
 import { Panel, Notice, Select } from '@/components/feedback/Primitives'
 import {
-  ArtifactStatus,
   EmptyArtifactState,
   MetricSummary,
 } from '@/components/research/Evidence'
 import { TechnicalDetailsDrawer } from '@/components/research/TechnicalDetailsDrawer'
 import { LinkageExplorer } from './LinkageExplorer'
-import type { Research } from '@/contracts/research'
 import { Pager } from './evidence-views/Pager'
 
 export function SequenceExplorer() {
-  const { data } = useSnapshot()
   const [params, setParams] = useSearchParams()
-  const research =
-    data?.leakage?.schemaVersion === 'LeakageSnapshotV2'
-      ? data.leakage.research
-      : undefined
   const linkage = params.get('mode') === 'linkage'
+
+  // Keep the legacy snapshot disabled unless the user explicitly opens
+  // the linkage compatibility view. The temporal view uses evidence-v2.
+  const legacySnapshot = useSnapshot(linkage)
+
+  const research =
+    linkage &&
+    legacySnapshot.data?.leakage?.schemaVersion === 'LeakageSnapshotV2'
+      ? legacySnapshot.data.leakage.research
+      : undefined
+
   return (
     <>
       <div className="toolbar">
@@ -28,7 +40,7 @@ export function SequenceExplorer() {
             aria-pressed={!linkage}
             onClick={() => setParams({ mode: 'sequences' })}
           >
-            Sequence structure
+            Temporal evidence
           </button>
           <button
             aria-pressed={linkage}
@@ -38,97 +50,170 @@ export function SequenceExplorer() {
           </button>
         </div>
       </div>
+
       {linkage ? (
-        <LinkageExplorer research={research} />
+        legacySnapshot.isError ? (
+          <Notice>
+            The legacy linkage snapshot is unavailable. Temporal evidence remains
+            available from organization-evidence-v2.
+          </Notice>
+        ) : legacySnapshot.isPending ? (
+          <p role="status">Loading linkage evidence…</p>
+        ) : (
+          <LinkageExplorer research={research} />
+        )
       ) : (
-        <SequenceStructure research={research} />
+        <TemporalEvidence />
       )}
     </>
   )
 }
-function SequenceStructure({ research }: { research?: Research }) {
-  const seq = research?.sequences.artifact
-  const sources = useMemo(
-    () => [...new Set(seq?.zones.map((z) => z.sourceVideo))],
-    [seq],
-  )
-  const [source, setSource] = useState('')
-  const [selected, setSelected] = useState('')
+
+function TemporalEvidence() {
+  const timelinesQuery = useOrganizationTimelines()
+  const zonesQuery = useOrganizationBoundaryZones()
+
+  const timelines = timelinesQuery.data ?? []
+  const allZones = zonesQuery.data ?? []
+
+  const [timelineId, setTimelineId] = useState('')
+  const [selectedZoneId, setSelectedZoneId] = useState('')
   const [page, setPage] = useState(0)
-  const [experimentIndex, setExperimentIndex] = useState('0')
-  const active = sources.includes(source) ? source : sources[0]
-  const zones = seq?.zones.filter((z) => z.sourceVideo === active) ?? []
-  const current = zones.find((z) => z.id === selected) ?? zones[0]
-  const max = zones.reduce((m, z) => Math.max(m, z.end), 1)
-  const experiments = research?.experiments.artifact
-  const experiment = experiments?.[Number(experimentIndex)] ?? experiments?.[0]
+
+  const active =
+    timelines.find((timeline) => timeline.timeline_id === timelineId) ??
+    timelines[0]
+
+  const zones = useMemo(
+    () =>
+      active
+        ? allZones.filter((zone) =>
+            zone.timeline_ids.includes(active.timeline_id),
+          )
+        : [],
+    [active, allZones],
+  )
+
+  const selectedZone =
+    zones.find((zone) => zone.element_id === selectedZoneId) ?? zones[0]
+
+  const frameIndexes = useMemo(
+    () =>
+      active?.points
+        .map((point) => point.frame_index)
+        .filter((value): value is number => value !== null) ?? [],
+    [active],
+  )
+
+  const frameMin = frameIndexes.length ? Math.min(...frameIndexes) : null
+  const frameMax = frameIndexes.length ? Math.max(...frameIndexes) : null
+
+  if (timelinesQuery.isPending || zonesQuery.isPending) {
+    return <p role="status">Loading temporal evidence…</p>
+  }
+
+  if (timelinesQuery.isError || zonesQuery.isError) {
+    return (
+      <Notice>
+        Verified temporal evidence could not be loaded from the organization
+        bundle.
+      </Notice>
+    )
+  }
+
+  if (!timelines.length) {
+    return <EmptyArtifactState stage="Temporal evidence" />
+  }
+
   return (
     <>
-      <h2>Where does temporal evidence suggest a boundary?</h2>
+      <h2>Temporal structure and boundary evidence</h2>
+
       <Notice>
-        Sequence boundaries are reviewed evidence, not ground truth. Candidate
-        zones are not exact cuts; visual recurrence is not exact duplication.
+        Timelines are presentation namespaces derived from stored evidence.
+        Filename families are not authoritative source-video identities.
+        Boundary zones are inclusive uncertainty intervals, not exact cuts.
       </Notice>
-      {!seq ? (
-        <EmptyArtifactState stage="Sequences" />
-      ) : (
+
+      <div className="toolbar">
+        <Select
+          label="Timeline"
+          value={active?.timeline_id ?? ''}
+          onChange={(value) => {
+            setTimelineId(value)
+            setSelectedZoneId('')
+            setPage(0)
+          }}
+          options={timelines.map((timeline) => ({
+            value: timeline.timeline_id,
+            label: timelineLabel(timeline),
+          }))}
+        />
+      </div>
+
+      {active && (
         <>
-          <div className="toolbar">
-            <ArtifactStatus state={research!.sequences.state} />
-            <Select
-              label="Source video"
-              value={active ?? ''}
-              onChange={(v) => {
-                setSource(v)
-                setPage(0)
-              }}
-              options={sources.map((value) => ({ value, label: value }))}
-            />
-          </div>
           <Panel
-            title="Source-video sampling grid"
-            meta="Sample indices · not capture timestamps"
+            title="Temporal evidence timeline"
+            meta={active.temporal_source.replaceAll('_', ' ')}
           >
+            <MetricSummary
+              items={[
+                {
+                  label: 'Observed points',
+                  value: active.points.length,
+                },
+                {
+                  label: 'Frame range',
+                  value:
+                    frameMin === null || frameMax === null
+                      ? 'Unavailable'
+                      : `${frameMin}–${frameMax}`,
+                },
+                {
+                  label: 'Boundary zones',
+                  value: zones.length,
+                },
+                {
+                  label: 'Source',
+                  value:
+                    active.source_video_id ??
+                    active.inferred_family ??
+                    active.source_archive ??
+                    'Unavailable',
+                },
+              ]}
+            />
+
             <div
               className="sequence-grid"
-              aria-label="Sequence evidence intervals"
+              aria-label="Temporal boundary evidence"
             >
               <div className="grid-axis">
-                <span>0</span>
-                <span>{max} samples</span>
+                <span>{frameMin ?? '—'}</span>
+                <span>{frameMax ?? '—'}</span>
               </div>
-              {zones.slice(page * 20, page * 20 + 20).map((z) => (
-                <div className="sequence-lane" key={z.id}>
-                  <button
-                    className={`sequence-interval decision-${z.decision}`}
-                    style={{
-                      marginLeft: `${(z.start / (max + 1)) * 85}%`,
-                      width: `${Math.max(4, ((z.end - z.start + 1) / (max + 1)) * 85)}%`,
-                    }}
-                    aria-label={`${z.kind.replaceAll('_', ' ')} ${z.id}: ${z.start}–${z.end}, ${z.decision}`}
-                    aria-pressed={current?.id === z.id}
-                    onClick={() => setSelected(z.id)}
-                  >
-                    <span aria-hidden="true">
-                      {z.decision === 'candidate'
-                        ? '?'
-                        : z.decision === 'rejected'
-                          ? '×'
-                          : '◇'}
-                    </span>
-                  </button>
-                  <span>
-                    {z.kind.replaceAll('_', ' ')} · {z.decision} · {z.start}–
-                    {z.end}
-                  </span>
-                </div>
-              ))}
+
+              {zones
+                .slice(page * 20, page * 20 + 20)
+                .map((zone) => (
+                  <BoundaryLane
+                    key={zone.element_id}
+                    zone={zone}
+                    frameMin={frameMin}
+                    frameMax={frameMax}
+                    selected={selectedZone?.element_id === zone.element_id}
+                    onSelect={() => setSelectedZoneId(zone.element_id)}
+                  />
+                ))}
+
               {!zones.length && (
-                <p>
-                  No intervals exported. Availability does not imply detected
-                  boundaries.
+                <p className="panel-body muted">
+                  No boundary zones are exported for this timeline. This does
+                  not establish that no temporal boundaries exist.
                 </p>
               )}
+
               <Pager
                 page={page}
                 size={20}
@@ -137,39 +222,43 @@ function SequenceStructure({ research }: { research?: Research }) {
               />
             </div>
           </Panel>
-          {current && (
-            <Panel title="Selected evidence">
+
+          {selectedZone && (
+            <Panel title="Selected boundary evidence">
               <MetricSummary
                 items={[
-                  { label: 'Kind', value: current.kind.replaceAll('_', ' ') },
-                  { label: 'Decision', value: current.decision },
                   {
-                    label: 'Sampling interval',
-                    value: `${current.start}–${current.end}`,
+                    label: 'Evidence ID',
+                    value: selectedZone.element_id,
                   },
                   {
-                    label: 'Review',
-                    value: current.reviewId
-                      ? 'Bound review'
-                      : current.kind === 'sequence_instance' &&
-                          seq.instanceReviewBound
-                        ? 'Bound source-set review'
-                        : 'Pending',
+                    label: 'Decision',
+                    value: selectedZone.decision,
+                  },
+                  {
+                    label: 'Inclusive interval',
+                    value: `${selectedZone.start}–${selectedZone.end}`,
+                  },
+                  {
+                    label: 'Exact cut',
+                    value: selectedZone.exact_cut ? 'Yes' : 'No',
                   },
                 ]}
               />
+
               <TechnicalDetailsDrawer>
                 <pre className="audit-json">
                   {JSON.stringify(
                     {
-                      sequenceSet: seq.id,
-                      zone: current,
-                      review:
-                        seq.reviews.find((r) => r.id === current.reviewId) ??
-                        null,
-                      recurrence: seq.recurrence.filter(
-                        (r) => r.a === current.id || r.b === current.id,
-                      ),
+                      timeline: {
+                        timeline_id: active.timeline_id,
+                        source_video_id: active.source_video_id,
+                        source_archive: active.source_archive,
+                        inferred_family: active.inferred_family,
+                        temporal_source: active.temporal_source,
+                        point_count: active.points.length,
+                      },
+                      boundary_zone: selectedZone,
                     },
                     null,
                     2,
@@ -178,103 +267,95 @@ function SequenceStructure({ research }: { research?: Research }) {
               </TechnicalDetailsDrawer>
             </Panel>
           )}
-        </>
-      )}
-      <Panel
-        title="Sequence experiments"
-        meta={research?.experiments.state ?? 'pending'}
-      >
-        {!experiments || !experiment ? (
-          <p className="panel-body muted">
-            Pending · no compatible experiment suite exported.
-          </p>
-        ) : (
-          <>
-            {experiments.length > 1 && (
-              <div className="panel-body">
-                <Select
-                  label="Experiment evidence"
-                  value={experimentIndex}
-                  onChange={setExperimentIndex}
-                  options={experiments.map((e, i) => ({
-                    value: String(i),
-                    label: `${e.encoder ?? 'Suite'} · ${e.representation ?? 'temporal'} · ${e.method ?? 'summary'} · ${i + 1}`,
-                  }))}
-                />
-              </div>
-            )}
-            <MetricSummary
-              items={[
-                { label: 'Experiment runs', value: experiments.length },
-                { label: 'Coverage', value: experiment.coverage },
-                { label: 'Agreement', value: experiment.agreement },
-                { label: 'Review state', value: experiment.reviewState },
-                {
-                  label: 'Recurrence candidates',
-                  value: experiment.recurrenceCandidates,
-                },
-              ]}
-            />
-            <TechnicalDetailsDrawer title="View experiment details">
-              <p>
-                Selected evidence summarized above. Runs are not ranked.
-                Agglomerative remains experimental.
-              </p>
-              <pre className="audit-json">
-                {JSON.stringify(experiments, null, 2)}
-              </pre>
-            </TechnicalDetailsDrawer>
-          </>
-        )}
-      </Panel>
-      <TechnicalDetailsDrawer title="Evidence and provenance">
-        <p>
-          Source video ≠ sequence. Sequence candidate ≠ sequence instance.
-          Review ≠ ground truth.
-        </p>
-        {research?.evidence.artifact?.map((e) => (
-          <div className="panel-body" key={e.id}>
-            <h3>
-              {e.source === 'hypatia_legacy_evidence_v1'
-                ? 'Legacy Hypatia review'
-                : e.source}
-            </h3>
+
+          <TechnicalDetailsDrawer title="Evidence and provenance">
             <p>
-              State: {e.state} · Canonical binding:{' '}
-              {e.canonicalBinding === null
-                ? 'unavailable'
-                : e.canonicalBinding
-                  ? 'yes'
-                  : 'no'}
+              Source video ≠ timeline. Timeline ≠ sequence. Boundary zone ≠
+              exact cut. Stored evidence is presented without automatic
+              confirmation.
             </p>
-            <pre className="audit-json">{JSON.stringify(e, null, 2)}</pre>
-          </div>
-        )) ?? (
-          <p>Evidence source: unavailable. No reviewer or date inferred.</p>
-        )}
-      </TechnicalDetailsDrawer>
-      {research && research.variants.length > 1 && (
-        <VariantDetails research={research} />
+            <pre className="audit-json">
+              {JSON.stringify(
+                {
+                  timeline_id: active.timeline_id,
+                  temporal_source: active.temporal_source,
+                  source_video_id: active.source_video_id,
+                  source_archive: active.source_archive,
+                  inferred_family: active.inferred_family,
+                  observed_points: active.points.length,
+                  exported_boundary_zones: zones.length,
+                },
+                null,
+                2,
+              )}
+            </pre>
+          </TechnicalDetailsDrawer>
+        </>
       )}
     </>
   )
 }
-function VariantDetails({ research }: { research: Research }) {
-  const [selected, setSelected] = useState(research.variants[0].id)
-  const variant = research.variants.find((v) => v.id === selected)!
-  return (
-    <TechnicalDetailsDrawer title="Dataset variant">
-      <Select
-        label="Dataset variant"
-        value={selected}
-        onChange={setSelected}
-        options={research.variants.map((v) => ({ value: v.id, label: v.name }))}
-      />
-      <pre className="audit-json">{JSON.stringify(variant, null, 2)}</pre>
-      <p>
-        Registry metadata only. This does not switch analysis populations or
-        establish causal effects.
-      </p>
-    </TechnicalDetailsDrawer>
+
+function BoundaryLane({
+  zone,
+  frameMin,
+  frameMax,
+  selected,
+  onSelect,
+}: {
+  zone: OrganizationBoundaryZone
+  frameMin: number | null
+  frameMax: number | null
+  selected: boolean
+  onSelect: () => void
+}) {
+  const span =
+    frameMin === null || frameMax === null
+      ? 1
+      : Math.max(1, frameMax - frameMin + 1)
+
+  const offset =
+    frameMin === null ? 0 : Math.max(0, (zone.start - frameMin) / span)
+
+  const width = Math.min(
+    1 - offset,
+    Math.max(0.01, (zone.end - zone.start + 1) / span),
   )
+
+  return (
+    <div className="sequence-lane">
+      <button
+        className={`sequence-interval decision-${zone.decision}`}
+        style={{
+          marginLeft: `${offset * 85}%`,
+          width: `${Math.max(4, width * 85)}%`,
+        }}
+        aria-label={`boundary zone ${zone.element_id}: ${zone.start}–${zone.end}, ${zone.decision}`}
+        aria-pressed={selected}
+        onClick={onSelect}
+      >
+        <span aria-hidden="true">
+          {zone.decision === 'candidate'
+            ? '?'
+            : zone.decision === 'unsupported'
+              ? '×'
+              : '◇'}
+        </span>
+      </button>
+
+      <span>
+        {zone.element_id} · {zone.decision} · {zone.start}–{zone.end}
+      </span>
+    </div>
+  )
+}
+
+function timelineLabel(timeline: OrganizationTimeline) {
+  const identity =
+    timeline.source_video_id ??
+    timeline.inferred_family ??
+    timeline.source_archive ??
+    timeline.timeline_id
+
+  return `${identity} · ${timeline.temporal_source.replaceAll('_', ' ')}`
 }
