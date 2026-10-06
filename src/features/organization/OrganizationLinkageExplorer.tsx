@@ -1,6 +1,10 @@
 ﻿import { useMemo, useState } from 'react'
 import type { OrganizationCandidatePair } from '@/contracts/organization-evidence-v2'
-import { useOrganizationCandidatePairs } from '@/data/organization-provider'
+import {
+  useOrganizationCandidatePairs,
+  useOrganizationContents,
+  useOrganizationMedia,
+} from '@/data/organization-provider'
 import { Notice, Panel } from '@/components/feedback/Primitives'
 import {
   EmptyArtifactState,
@@ -21,6 +25,46 @@ export function OrganizationLinkageExplorer() {
   const selected =
     candidates.find((candidate) => candidate.candidate_id === selectedId) ??
     null
+
+  const contentsQuery = useOrganizationContents(selected !== null)
+  const mediaQuery = useOrganizationMedia(selected !== null)
+
+  const selectedPreviews = useMemo(() => {
+    if (!selected || !contentsQuery.data || !mediaQuery.data) return null
+
+    const labeledContent = contentsQuery.data.find(
+      (content) => content.content_id === selected.labeled_content_id,
+    )
+    const videoContent = contentsQuery.data.find(
+      (content) => content.content_id === selected.video_content_id,
+    )
+
+    const mediaByPreview = new Map(
+      mediaQuery.data.map((item) => [item.preview_key, item]),
+    )
+
+    const resolve = (
+      content:
+        | (typeof contentsQuery.data)[number]
+        | undefined,
+    ) => {
+      if (!content) return null
+
+      const media = mediaByPreview.get(content.preview_key)
+
+      return {
+        contentId: content.content_id,
+        filename: content.canonical_filename,
+        previewKey: content.preview_key,
+        media: media ?? null,
+      }
+    }
+
+    return {
+      labeled: resolve(labeledContent),
+      video: resolve(videoContent),
+    }
+  }, [selected, contentsQuery.data, mediaQuery.data])
 
   const summary = useMemo(
     () => ({
@@ -141,6 +185,35 @@ export function OrganizationLinkageExplorer() {
             ]}
           />
 
+          {contentsQuery.isPending || mediaQuery.isPending ? (
+            <p className="panel-body" role="status">
+              Loading selected previews…
+            </p>
+          ) : contentsQuery.isError || mediaQuery.isError ? (
+            <Notice>
+              Preview metadata could not be loaded. Candidate scores and IDs
+              remain available.
+            </Notice>
+          ) : selectedPreviews ? (
+            <div
+              className="panel-body"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                gap: '1rem',
+              }}
+            >
+              <PreviewFigure
+                label="Labeled content"
+                evidence={selectedPreviews.labeled}
+              />
+              <PreviewFigure
+                label="Video content"
+                evidence={selectedPreviews.video}
+              />
+            </div>
+          ) : null}
+
           <div className="panel-body">
             <p>
               <strong>Labeled content:</strong>{' '}
@@ -219,6 +292,74 @@ function CandidateRow({
   )
 }
 
+type PreviewEvidence = {
+  contentId: string
+  filename: string | null
+  previewKey: string
+  media: {
+    media_available: boolean
+    relative_path: string | null
+    unavailable_reason: string | null
+    width: number | null
+    height: number | null
+  } | null
+} | null
+
+function PreviewFigure({
+  label,
+  evidence,
+}: {
+  label: string
+  evidence: PreviewEvidence
+}) {
+  const media = evidence?.media
+
+  return (
+    <figure style={{ margin: 0 }}>
+      <figcaption>
+        <span className="eyebrow">{label.toUpperCase()}</span>
+        <br />
+        <strong>{evidence?.filename ?? 'Preview unavailable'}</strong>
+      </figcaption>
+
+      {media?.media_available && media.relative_path ? (
+        <img
+          src={organizationMediaUrl(media.relative_path)}
+          alt={`${label} candidate preview`}
+          width={media.width ?? undefined}
+          height={media.height ?? undefined}
+          loading="lazy"
+          decoding="async"
+          style={{
+            width: '100%',
+            height: 'auto',
+            marginTop: '0.5rem',
+          }}
+        />
+      ) : (
+        <p className="muted">
+          {media?.unavailable_reason ?? 'No exported preview is available.'}
+        </p>
+      )}
+
+      {evidence && (
+        <small>
+          content {shortId(evidence.contentId)}
+        </small>
+      )}
+    </figure>
+  )
+}
+
+function organizationMediaUrl(relativePath: string) {
+  const safePath = relativePath
+    .split('/')
+    .map((part) => encodeURIComponent(part))
+    .join('/')
+
+  return `/runtime/organization-media/${safePath}`
+}
+
 function formatScore(value: number | null) {
   return value === null ? 'unavailable' : value.toFixed(4)
 }
@@ -230,3 +371,5 @@ function formatRank(value: number | null) {
 function shortId(value: string) {
   return value.length <= 16 ? value : `${value.slice(0, 12)}…`
 }
+
+
