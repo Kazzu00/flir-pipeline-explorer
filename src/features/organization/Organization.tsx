@@ -2,6 +2,7 @@
 import { NavLink, useParams, Navigate, useLocation } from 'react-router-dom'
 import { organizationTabs, legacyOrganizationRoutes } from '@/app/navigation'
 import { PageTitle } from '@/components/feedback/Primitives'
+import { OrganizationEvidenceProvider } from '@/data/organization-provider'
 import { DatasetOverview } from './DatasetOverview'
 const VisualExplorer = lazy(() =>
   import('./VisualExplorer').then((m) => ({ default: m.VisualExplorer })),
@@ -28,7 +29,7 @@ export function Organization() {
   const title =
     organizationTabs.find(([id]) => id === stage)?.[1] ?? 'Stage unavailable'
   return (
-    <>
+    <OrganizationEvidenceProvider>
       <PageTitle
         eyebrow="MODULE 02 / RESEARCH EXPLORATION"
         title={stage ? title : 'Representation & organization'}
@@ -54,6 +55,8 @@ export function Organization() {
           <DatasetOverview />
         )}
       </Suspense>
-    </>
+    </OrganizationEvidenceProvider>
   )
 }
+
+
