@@ -220,6 +220,22 @@ export const PartitionSummarySchema = z
   })
   .strict()
 
+export const ClassSupportSchema = z
+  .object({
+    split: PartitionSchema,
+    class_id: NonNegativeInt,
+    class_name: z.string(),
+    images: NonNegativeInt,
+    contents: NonNegativeInt,
+    instances: NonNegativeInt,
+    empty_annotations: NonNegativeInt,
+    instance_percentage: z.number(),
+    global_instance_percentage: z.number(),
+    absolute_percentage_point_deviation: z.number(),
+    target_instances: z.number(),
+  })
+  .strict()
+
 export const SplitSchema = z
   .object({
     strategy: z.string(),
@@ -233,9 +249,7 @@ export const SplitSchema = z
     ]),
     cluster_run_id: z.string().nullable(),
     partitions: z.record(z.string(), PartitionSummarySchema),
-    class_support: z
-      .array(z.record(z.string(), JsonValueSchema))
-      .nullable(),
+    class_support: z.array(ClassSupportSchema).nullable(),
   })
   .strict()
 
@@ -485,4 +499,5 @@ export type OrganizationEvidenceBundle = z.infer<
 >
 export type OrganizationEvidenceResource =
   keyof typeof OrganizationEvidenceResourceSchemas
+
 
