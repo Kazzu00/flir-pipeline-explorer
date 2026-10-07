@@ -2,6 +2,10 @@
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from '@/app/App'
+import {
+  clusteringFixtureResponse,
+  organizationClusteringFixture,
+} from './organization-clustering-fixture'
 
 function open(path: string) {
   window.history.replaceState({}, '', path)
@@ -33,69 +37,50 @@ describe('Research exploration flows', () => {
       }),
     ).toBeVisible()
 
-    await userEvent.click(
-      screen.getByRole('link', { name: 'Overview' }),
-    )
+    await userEvent.click(screen.getByRole('link', { name: 'Overview' }))
 
     expect(
-      await screen.findByText(
-        'What data and analysis are available?',
-      ),
+      await screen.findByText('What data and analysis are available?'),
     ).toBeVisible()
   })
 
-  it('selects a cluster and preserves it when adding split metadata', async () => {
-    open('/organization/clustering')
-
-    await screen.findByRole('heading', {
-      name: 'Visual exploration',
-      level: 1,
-    })
-
-    await userEvent.click(
-      await screen.findByRole('button', {
-        name: 'Cluster 00 · 22',
-      }),
-    )
-
-    expect(
-      screen.getByRole('button', {
-        name: 'Cluster 00 · 22',
-      }),
-    ).toHaveAttribute('aria-pressed', 'true')
-
-    expect(
-      screen.queryByText('Split assignment'),
-    ).not.toBeInTheDocument()
-
-    await userEvent.click(
-      screen.getByRole('button', {
-        name: 'AFTER SPLIT',
-      }),
-    )
-
-    expect(
-      screen.getByText('Split assignment'),
-    ).toBeVisible()
-
-    expect(
-      screen.getByRole('button', {
-        name: 'Cluster 00 · 22',
-      }),
-    ).toHaveAttribute('aria-pressed', 'true')
-
-    await userEvent.selectOptions(
-      screen.getByLabelText(
-        'Run / encoder / reduction / algorithm',
+  it('opens exported clustering and resets the selection when its run changes', async () => {
+    const data = organizationClusteringFixture()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(async (input) =>
+        clusteringFixtureResponse(data, input),
       ),
-      'demo-cluster-hdbscan',
     )
-
+    open('/organization/clustering')
+    const cluster = await screen.findByLabelText('Cluster', { exact: true })
+    expect(screen.queryByLabelText('Encoder', { exact: true })).toBeNull()
+    await userEvent.selectOptions(cluster, '42')
+    const grid = within(screen.getByRole('list', { name: 'Cluster contents' }))
+    const thumbnail = grid.getByRole('button', {
+      name: 'Inspect content synthetic-content-2',
+    })
+    await userEvent.click(thumbnail)
+    expect(thumbnail).toHaveAttribute('aria-pressed', 'true')
+    const selected = within(
+      screen
+        .getByRole('heading', { name: 'Selected content' })
+        .closest('section')!,
+    )
     expect(
-      screen.getByRole('button', {
-        name: 'AFTER SPLIT',
-      }),
-    ).toBeDisabled()
+      selected.getByText('synthetic-content-2', { exact: true }),
+    ).toBeVisible()
+    await userEvent.selectOptions(
+      screen.getByLabelText('Clustering configuration'),
+      data.clustering_configurations[1].cluster_run_id,
+    )
+    expect(screen.getByLabelText('Cluster', { exact: true })).toHaveValue('19')
+    expect(
+      screen.getByText(
+        'Select a content thumbnail to inspect its stored evidence.',
+      ),
+    ).toBeVisible()
+    expect(screen.queryByRole('button', { name: 'AFTER SPLIT' })).toBeNull()
   })
 
   it('renders exported splits without synthesizing pre-split groups', async () => {
@@ -165,19 +150,11 @@ describe('Research exploration flows', () => {
 
     open('/organization/splits')
 
-    await screen.findByText(
-      'Available partition artifacts',
-    )
+    await screen.findByText('Available partition artifacts')
 
-    expect(
-      screen.getByLabelText(
-        'Partition strategy / seed',
-      ),
-    ).toBeVisible()
+    expect(screen.getByLabelText('Partition strategy / seed')).toBeVisible()
 
-    expect(
-      screen.getByText('REAL / VERIFIED EXPORT'),
-    ).toBeVisible()
+    expect(screen.getByText('REAL / VERIFIED EXPORT')).toBeVisible()
 
     await userEvent.click(
       screen.getByRole('button', {
@@ -185,16 +162,10 @@ describe('Research exploration flows', () => {
       }),
     )
 
-    expect(
-      screen.getByText(
-        'Grouping context before assignment',
-      ),
-    ).toBeVisible()
+    expect(screen.getByText('Grouping context before assignment')).toBeVisible()
 
     expect(
-      screen.getByText(
-        /No DEMO groups are substituted here/,
-      ),
+      screen.getByText(/No DEMO groups are substituted here/),
     ).toBeVisible()
   })
 
@@ -214,9 +185,7 @@ describe('Research exploration flows', () => {
       name: 'Demo experiment registry',
     })
 
-    expect(
-      within(table).getAllByRole('row'),
-    ).toHaveLength(2)
+    expect(within(table).getAllByRole('row')).toHaveLength(2)
 
     await userEvent.click(
       screen.getByRole('button', {
@@ -224,19 +193,10 @@ describe('Research exploration flows', () => {
       }),
     )
 
-    expect(
-      screen.getByText('Artifact references'),
-    ).toBeVisible()
+    expect(screen.getByText('Artifact references')).toBeVisible()
 
-    await userEvent.type(
-      screen.getByRole('searchbox'),
-      'does-not-exist',
-    )
+    await userEvent.type(screen.getByRole('searchbox'), 'does-not-exist')
 
-    expect(
-      screen.getByText(
-        'No runs match these filters.',
-      ),
-    ).toBeVisible()
+    expect(screen.getByText('No runs match these filters.')).toBeVisible()
   })
 })

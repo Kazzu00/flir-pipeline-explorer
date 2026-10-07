@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { nav } from '@/app/navigation'
 import { useSnapshot, DataModeSwitch } from '@/data/provider'
 import { isDetectionRoute } from '@/features/detection/route'
+import { isOrganizationClusteringRoute } from '@/features/organization/clustering/route'
 import { useDetectionSnapshot } from '@/features/detection/query'
 const icons = [Network, Layers, GitBranch, Box, FlaskConical, Activity]
 export function AppShell() {
@@ -27,8 +28,12 @@ export function AppShell() {
   )
   const location = useLocation()
   const detector = isDetectionRoute(location.pathname, location.search)
+  const clustering = isOrganizationClusteringRoute(
+    location.pathname,
+    location.search,
+  )
   const organizationEvidence =
-    location.pathname === '/organization/sequences'
+    location.pathname === '/organization/sequences' || clustering
   const { data } = useSnapshot(!detector && !organizationEvidence)
   const mixed = !!data?.leakage
   const detection = useDetectionSnapshot(detector)
@@ -51,7 +56,7 @@ export function AppShell() {
   }, [light])
   useEffect(() => {
     mainRef.current?.focus({ preventScroll: true })
-    document.title = `${location.pathname === '/' ? 'Pipeline overview' : location.pathname.split('/').filter(Boolean).join(' / ')} Â· FLIR Explorer`
+    document.title = `${location.pathname === '/' ? 'Pipeline overview' : location.pathname.split('/').filter(Boolean).join(' / ')} · FLIR Explorer`
   }, [location.pathname])
   return (
     <div className="app-shell">
@@ -101,13 +106,15 @@ export function AppShell() {
                     : '◈ DEMO WORKSPACE'}
             </span>
             <p>
-              {organizationEvidence
-                ? 'organization-evidence-v2 · verified local export.'
-                : detector
-                  ? 'Other modules retain their own data modes.'
-                  : mixed
-                    ? 'M02 local artifacts.'
-                    : 'Synthetic data.'}
+              {clustering
+                ? 'organization-evidence-v2 · stored cluster evidence.'
+                : organizationEvidence
+                  ? 'organization-evidence-v2 · verified local export.'
+                  : detector
+                    ? 'Other modules retain their own data modes.'
+                    : mixed
+                      ? 'M02 local artifacts.'
+                      : 'Synthetic data.'}
               <br />
               Real research boundaries.
             </p>
@@ -154,13 +161,15 @@ export function AppShell() {
             {!detector && !organizationEvidence && <DataModeSwitch />}
             <span className="local-status">
               <span />
-              {organizationEvidence
-                ? 'organization-evidence-v2 · verified export'
-                : detector
-                  ? 'Detector export · presentation only'
-                  : mixed
-                    ? 'Artifact + mock adapters · local'
-                    : 'Mock adapter · local'}
+              {clustering
+                ? 'organization-evidence-v2 · stored export'
+                : organizationEvidence
+                  ? 'organization-evidence-v2 · verified export'
+                  : detector
+                    ? 'Detector export · presentation only'
+                    : mixed
+                      ? 'Artifact + mock adapters · local'
+                      : 'Mock adapter · local'}
             </span>
             <Button
               variant="ghost"
@@ -175,24 +184,35 @@ export function AppShell() {
           </div>
         </header>
         <div className="demo-bar">
-          <span>{organizationEvidence ? 'REAL / VERIFIED' : detector ? detectorMode : mixed ? 'MIXED' : 'DEMO'}</span>
-          {organizationEvidence
-            ? 'Module 02 sequence and linkage evidence comes from organization-evidence-v2. Stored artifacts are presented without scientific recomputation in the frontend.'
-            : detector
-              ? 'Detector contract only. Scientific computation and verification upstream. Modules 01 and 03 remain DEMO.'
-              : mixed
-                ? 'Module 02: local artifacts. Modules 01 and 03: DEMO. Missing stages remain pending.'
-                : 'All displayed collections, runs and numeric metrics are synthetic. Repository evidence is labeled separately.'}
+          <span>
+            {clustering
+              ? 'EXPORTED EVIDENCE'
+              : organizationEvidence
+                ? 'REAL / VERIFIED'
+                : detector
+                  ? detectorMode
+                  : mixed
+                    ? 'MIXED'
+                    : 'DEMO'}
+          </span>
+          {clustering
+            ? 'Module 02 clustering uses organization-evidence-v2. Export and membership checks do not establish sequence identity or ground truth.'
+            : organizationEvidence
+              ? 'Module 02 sequence and linkage evidence comes from organization-evidence-v2. Stored artifacts are presented without scientific recomputation in the frontend.'
+              : detector
+                ? 'Detector contract only. Scientific computation and verification upstream. Modules 01 and 03 remain DEMO.'
+                : mixed
+                  ? 'Module 02: local artifacts. Modules 01 and 03: DEMO. Missing stages remain pending.'
+                  : 'All displayed collections, runs and numeric metrics are synthetic. Repository evidence is labeled separately.'}
         </div>
         <main id="main" tabIndex={-1} ref={mainRef}>
           <Outlet />
         </main>
         <footer>
           FLIR RESEARCH WORKSPACE{' '}
-          <span>Visualization only Â· no scientific processing</span>
+          <span>Visualization only · no scientific processing</span>
         </footer>
       </div>
     </div>
   )
 }
-

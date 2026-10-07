@@ -7,10 +7,11 @@ Interfaz de investigación para explorar tres pipelines independientes de visió
 - **Detector conectado:** `/organization/evaluation` presenta el contrato público `detection-export-v1`, publicación upstream `0a4ea1f`: 48/48 runs, 16 splits, cuatro estrategias y siete asociaciones preespecificadas. Finalización y verificación reportadas upstream; validación de integridad aquí. Comparación descriptiva, no causal. [Contrato, procedencia y actualización](docs/DETECTION_CONTRACT.md).
 
 - **Implementado:** M02 con cuatro secciones: Overview, Visual exploration, Sequences & linkage y Evaluation; Home como pipeline navegable; detalles técnicos en drawers accesibles; selección enlazada entre scatter, contenido y grilla de muestreo.
+- **Clustering conectado:** `?view=clustering` consume `organization-evidence-v2` mediante su provider, independiente del snapshot DEMO/REAL del workspace. Configuración y cluster seleccionan contenidos únicos, previews locales y occurrences; grid inicial de 60 contenidos con `Load more`. No usa scatter ni inventa coordenadas. Las membresías preservadas de splits se distinguen del artifact completo; los datos ausentes quedan explícitos.
 - **Integración conservada:** V1 y V2 validados por Zod, modo REAL/MIXED, artifacts ausentes pendientes sin fallback. El snapshot local V1 fue aceptado conservando 8.093 contenidos / 9.648 ocurrencias; esta comprobación de infraestructura no revalida resultados científicos.
 - **V2:** contratos opcionales para candidatos, zonas, intervalos, revisión, evidencia nativa/legacy, experimentos, recurrencia, linkage y agregación. Exportador read-only con rutas explícitas. Las revisiones de grupos supported/unsupported no confirman enlaces exactos.
 - **Docker validado en CI:** imagen multietapa con bases fijadas por digest, nginx, configuración runtime, Compose healthy y snapshot sintético montado read-only. Motor local no disponible; ejecución y health locales pendientes. Ver [DOCKER](docs/DOCKER.md).
-- **No conectado:** imágenes privadas, máscaras reales, APIs, ejecución de jobs, integración real M01/M03. No hay backend, autenticación ni despliegue cloud.
+- **No conectado:** máscaras reales, APIs, ejecución de jobs, integración real M01/M03. Los previews de Organization se sirven desde recursos locales ignorados; no se incluyen en el build ni se publican. No hay backend, autenticación ni despliegue cloud.
 - **No ejecutado:** extracción, clustering, detección de secuencias, linkage, splits, entrenamiento ni nueva ciencia. La UI no certifica eliminación de leakage ni ground truth.
 
 ## Relación con los repositorios científicos
@@ -67,7 +68,7 @@ e2e/                          navegador y axe
 | -------------------------- | ---------------------------------------------------------------- |
 | `/`                        | Pipeline global navegable                                        |
 | `/organization`            | Dataset y disponibilidad de evidencia                            |
-| `/organization/explore`    | Encoder + vista de embeddings, similitud, reducción o clustering |
+| `/organization/explore`    | Encoder para embeddings/similitud/reducción; configuración exportada para clustering |
 | `/organization/sequences`  | Sequence structure / Cross-dataset linkage                       |
 | `/organization/evaluation` | Grouping/split, dependencia residual y detector                  |
 | `/preprocessing/:stage?`   | M01 DEMO, sin integración nueva                                  |
@@ -77,7 +78,7 @@ e2e/                          navegador y axe
 
 Las ocho rutas anteriores de M02 siguen funcionando mediante redirects; por ejemplo `/organization/reduction` → `/organization/explore?view=reduction`. Detalles en [INFORMATION_ARCHITECTURE](docs/INFORMATION_ARCHITECTURE.md).
 
-AFTER SPLIT solo se habilita con un split cluster-aware compatible. La grilla es **Source-video sampling grid**, no una timeline de secuencias inferidas. En REAL/MIXED no se reutilizan particiones históricas como resultados del dataset de video muestreado.
+Clustering presenta agrupación visual almacenada, no identidad temporal, secuencias, leakage confirmado ni ground truth. Noise −1 permanece separado y no representa un único grupo indivisible. Esta vista no contiene BEFORE/AFTER SPLIT; la evidencia de particiones conserva su vista propia. En REAL/MIXED no se reutilizan particiones históricas como resultados del dataset de video muestreado.
 
 ## Datos DEMO e integración local
 

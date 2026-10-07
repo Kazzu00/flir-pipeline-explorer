@@ -6,6 +6,7 @@ import {
   useLocation,
 } from 'react-router-dom'
 import { isDetectionRoute } from '@/features/detection/route'
+import { isOrganizationClusteringRoute } from '@/features/organization/clustering/route'
 import { lazy, Suspense } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AppShell } from '@/components/layout/AppShell'
@@ -41,14 +42,19 @@ const client = new QueryClient({ defaultOptions: { queries: { retry: 1 } } })
 function DataGate() {
   const location = useLocation()
   const detector = isDetectionRoute(location.pathname, location.search)
-  const { isPending, error, refetch } = useSnapshot(!detector)
-  if (isPending && !detector)
+  const clustering = isOrganizationClusteringRoute(
+    location.pathname,
+    location.search,
+  )
+  const independentEvidence = detector || clustering
+  const { isPending, error, refetch } = useSnapshot(!independentEvidence)
+  if (isPending && !independentEvidence)
     return (
       <p className="empty" role="status">
         Loading research workspace…
       </p>
     )
-  if (error && !detector)
+  if (error && !independentEvidence)
     return (
       <div className="empty" role="alert">
         <h1>Data could not be validated</h1>

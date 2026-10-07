@@ -7,7 +7,9 @@ React components consume `useSnapshot` for workspace data and `useDetectionSnaps
 ## Domain components
 
 - `DatasetOverview`: compact coverage and visual/temporal availability graph.
-- `VisualExplorer`: URL view selection and encoder controls.
+- `VisualExplorer`: URL view selection and encoder controls for legacy representation views; clustering dispatches directly to `organization-evidence-v2`, without a misleading encoder selector.
+- `clustering/Clustering`: configuration and run-local cluster selection through `OrganizationEvidenceProvider` / its Zod adapter. Memoized indices join memberships to unique contents, preview keys and occurrence records. It checks join identities without executing science. Frozen split membership provenance, full-artifact availability and membership verification remain distinct.
+- `ClusterVisualGrid` / `ClusterContentDetail`: real local previews, 60-content rendering batches, explicit missing media, selected evidence and bounded occurrence lists. No coordinates are fabricated; `Scatter` and `Gallery` remain available to legacy Embeddings. Run/cluster changes reset content selection and rendering limits.
 - `ArtifactStage`: small compatibility/run dispatcher; no dataset or sequence domain logic.
 - `evidence-views/ArtifactExplorer`, `SimilarityEvidence`, `SplitEvidence`, `SummaryTables`, `Pager`: independent domain rendering and bounded tables.
 - `SequenceExplorer`, `LinkageExplorer`: temporal intervals, evidence provenance, independent encoder scores and reviews.
@@ -26,3 +28,5 @@ Docker uses locked npm dependencies and digest-pinned Node/nginx base images. On
 V1 is still monolithic. Fragment loading is a documented future protocol, not an implemented feature; see [SNAPSHOT_PERFORMANCE](SNAPSHOT_PERFORMANCE.md). Reference clones and all real runtime data remain ignored and read-only.
 
 The explicitly authorized public detector contract is a narrow exception: checked in under `src/features/detection/snapshot/`, emitted as hash-named static assets. It does not unignore or include general runtime snapshots. Its data gate is independent of the workspace snapshot; missing/invalid detector data never falls back to demo.
+
+The organization clustering route also bypasses the legacy snapshot data gate. Its shell identifies exported evidence, and the view reports its own loading, validation, missing-resource and identity-error states. JSON resources under `/runtime/organization-evidence-v2/` and previews resolved by `organizationMediaUrl` remain read-only, local and excluded from production builds. This UI integration does not validate scientific clustering quality or establish temporal identities.

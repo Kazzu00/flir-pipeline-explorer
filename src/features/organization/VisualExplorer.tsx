@@ -14,17 +14,17 @@ const views = {
   clustering: Clustering,
 }
 export function VisualExplorer() {
-  const { data } = useSnapshot()
   const [params, setParams] = useSearchParams()
   const [encoder, setEncoder] = useState('DINOv2')
   const requested = params.get('view') ?? 'reduction'
   const view =
     requested in views ? (requested as keyof typeof views) : 'reduction'
+  const { data } = useSnapshot(view !== 'clustering')
   const Demo = views[view]
   return (
     <>
       <div className="toolbar explorer-toolbar">
-        {data?.leakage && (
+        {view !== 'clustering' && data?.leakage && (
           <Select
             label="Encoder"
             value={encoder}
@@ -46,7 +46,9 @@ export function VisualExplorer() {
         />
         <span className="muted">Visual similarity ≠ temporal continuity</span>
       </div>
-      {data?.leakage ? (
+      {view === 'clustering' ? (
+        <Clustering />
+      ) : data?.leakage ? (
         <ArtifactStage
           key={`${view}-${encoder}`}
           snapshot={data.leakage}

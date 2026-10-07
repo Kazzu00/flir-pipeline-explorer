@@ -1,10 +1,7 @@
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import fixture from '../src/test/fixtures/leakage-synthetic.json' with { type: 'json' }
-import {
-  largeSyntheticSnapshot,
-  withClusteringAndSplit,
-} from '../src/test/artifact-fixtures'
+import { largeSyntheticSnapshot } from '../src/test/artifact-fixtures'
 
 test('synthetic artifact flow: MIXED, persisted coordinates, both encoders and missing stages', async ({
   page,
@@ -42,8 +39,12 @@ test('synthetic artifact flow: MIXED, persisted coordinates, both encoders and m
   const nav = page.getByRole('navigation', { name: 'Organization stages' })
   await page.getByLabel('View', { exact: true }).selectOption('clustering')
   await expect(
-    page.getByRole('heading', { name: 'clustering: pending' }),
+    page.getByRole('heading', { name: 'Cluster visual explorer' }),
   ).toBeVisible()
+  await expect(
+    page.getByLabel('Clustering configuration', { exact: true }),
+  ).toBeVisible()
+  await expect(page.getByLabel('Encoder', { exact: true })).toHaveCount(0)
   await nav.getByRole('link', { name: 'Evaluation', exact: true }).click()
   // Evaluation now opens the independent detector contract; the sampled-video
   // grouping view still preserves its own pending state without synthetic fallback.
@@ -109,33 +110,69 @@ test('9000 persisted points use canvas and a bounded content table', async ({
   expect(await page.locator('tbody tr').count()).toBeLessThan(30)
 })
 
-test('real clustering preserves BEFORE/AFTER and disables incompatible allocation', async ({
+test('organization clustering is independent of legacy snapshots and workspace mode', async ({
   page,
 }) => {
-  const data = withClusteringAndSplit()
-  data.runs = data.runs.filter((r) => r.stage !== 'splits')
   await page.route('**/runtime/leakage-snapshot.json', (route) =>
-    route.fulfill({ json: data }),
+    route.fulfill({ json: fixture }),
   )
   await page.goto('/organization/clustering')
+  const configuration = page.getByLabel('Clustering configuration', {
+    exact: true,
+  })
+  await expect(configuration).toBeVisible()
+  const runId = await configuration.inputValue()
+  await expect(page.getByLabel('Data mode', { exact: true })).toHaveCount(0)
+  await page.getByLabel('View', { exact: true }).selectOption('reduction')
   await page.getByLabel('Data mode', { exact: true }).selectOption('real')
+  await page.getByLabel('View', { exact: true }).selectOption('clustering')
+  await expect(configuration).toHaveValue(runId)
+  await expect(page.getByLabel('Encoder', { exact: true })).toHaveCount(0)
   await expect(
     page.getByRole('button', { name: 'AFTER SPLIT', exact: true }),
-  ).toBeDisabled()
-  await page.unroute('**/runtime/leakage-snapshot.json')
-  await page.route('**/runtime/leakage-snapshot.json', (route) =>
-    route.fulfill({ json: withClusteringAndSplit() }),
+  ).toHaveCount(0)
+  const evidence = page.getByRole('region', { name: 'Clustering evidence' })
+  await expect(evidence).not.toContainText(
+    /DEMO|SYNTHETIC IDENTITIES|Status mock/,
   )
-  await page.reload()
-  await page.getByLabel('Data mode', { exact: true }).selectOption('real')
-  await page.getByRole('button', { name: 'AFTER SPLIT', exact: true }).click()
-  await expect(
-    page.getByRole('heading', { name: 'Clusters after allocation' }),
-  ).toBeVisible()
-  await page.getByLabel('Cluster filter', { exact: true }).selectOption('-1')
-  await expect(
-    page.getByRole('img', {
-      name: 'Artifact scatter: 1 persisted coordinates',
-    }),
-  ).toBeVisible()
+  await expect(evidence.locator('canvas')).toHaveCount(0)
+  const grid = page.getByRole('list', { name: 'Cluster contents' })
+  await expect(grid.getByRole('button').first()).toBeVisible()
+  await grid.getByRole('button').first().click()
+  const contentId = (await grid
+    .getByRole('button')
+    .first()
+    .getAttribute('aria-label'))!.replace('Inspect content ', '')
+  const selected = page.locator('section.panel').filter({
+    has: page.getByRole('heading', { name: 'Selected content', exact: true }),
+  })
+  await expect(selected.getByText(contentId, { exact: true })).toBeVisible()
+
+  const options = await configuration
+    .locator('option')
+    .evaluateAll((elements) =>
+      elements.map((option) => (option as HTMLOptionElement).value),
+    )
+  const otherRun = options.find((value) => value !== runId)
+  if (otherRun) {
+    await configuration.selectOption(otherRun)
+    await expect(page.getByLabel('Cluster', { exact: true })).toBeVisible()
+    await expect(
+      page.getByText(
+        'Select a content thumbnail to inspect its stored evidence.',
+      ),
+    ).toBeVisible()
+    await configuration.selectOption(runId)
+    await expect(grid.getByRole('button').first()).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  }
+  await page.getByLabel('View', { exact: true }).selectOption('reduction')
+  await page.getByLabel('Data mode', { exact: true }).selectOption('demo')
+  await page.getByLabel('View', { exact: true }).selectOption('clustering')
+  await expect(configuration).toHaveValue(runId)
+  await expect(evidence).not.toContainText(
+    /DEMO|SYNTHETIC IDENTITIES|Status mock/,
+  )
 })

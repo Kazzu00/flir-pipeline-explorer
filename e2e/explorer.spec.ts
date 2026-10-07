@@ -19,24 +19,82 @@ test('home, module navigation and core clustering interaction', async ({
     .getByRole('link', { name: 'Visual exploration', exact: true })
     .click()
   await page.getByLabel('View', { exact: true }).selectOption('clustering')
-  await page
-    .getByRole('button', { name: 'Cluster 00 · 22', exact: true })
-    .click()
-  await page.getByRole('button', { name: 'AFTER SPLIT', exact: true }).click()
   await expect(
-    page.getByText('Split assignment', { exact: true }),
+    page.getByLabel('Clustering configuration', { exact: true }),
   ).toBeVisible()
+  await expect(page.getByLabel('Encoder', { exact: true })).toHaveCount(0)
+  const cluster = page.getByLabel('Cluster', { exact: true })
+  await expect(cluster).toBeVisible()
+  const options = await cluster
+    .locator('option')
+    .evaluateAll((elements) =>
+      elements.map((option) => (option as HTMLOptionElement).value),
+    )
+  await cluster.selectOption(options.at(-1)!)
+  const grid = page.getByRole('list', { name: 'Cluster contents' })
+  const content = grid.getByRole('button').first()
+  await expect(content).toBeVisible()
+  await content.scrollIntoViewIfNeeded()
+  const preview = content.getByRole('img')
+  if (await preview.count()) {
+    await expect
+      .poll(
+        () =>
+          preview.evaluate(
+            (image: HTMLImageElement) =>
+              image.complete && image.naturalWidth > 0,
+          ),
+        { timeout: 20000 },
+      )
+      .toBe(true)
+  } else {
+    await expect(
+      content.getByText('Preview unavailable', { exact: true }),
+    ).toBeVisible()
+  }
+  expect(await grid.getByRole('button').count()).toBeLessThanOrEqual(60)
+  await content.focus()
+  await page.keyboard.press('Enter')
+  await expect(content).toHaveAttribute('aria-pressed', 'true')
+  const contentId = (await content.getAttribute('aria-label'))!.replace(
+    'Inspect content ',
+    '',
+  )
+  const selected = page.locator('section.panel').filter({
+    has: page.getByRole('heading', { name: 'Selected content', exact: true }),
+  })
+  await expect(selected.getByText(contentId, { exact: true })).toBeVisible()
   await expect(
-    page.getByRole('button', { name: 'Cluster 00 · 22', exact: true }),
-  ).toHaveAttribute('aria-pressed', 'true')
+    selected
+      .getByRole('region', { name: 'Content occurrences' })
+      .getByRole('listitem')
+      .first(),
+  ).toBeVisible()
+  await page
+    .locator('.cluster-inspection-layout')
+    .evaluate((element) =>
+      window.scrollTo(
+        0,
+        window.scrollY + element.getBoundingClientRect().top + 40,
+      ),
+    )
+  await expect
+    .poll(() =>
+      page
+        .locator('#cluster-selected-content')
+        .evaluate((element) => Math.round(element.getBoundingClientRect().top)),
+    )
+    .toBe(16)
   await page.screenshot({
     path: 'test-results/clustering-desktop.png',
-    fullPage: true,
+    fullPage: false,
   })
-  await page.getByRole('button', { name: 'BEFORE SPLIT', exact: true }).click()
-  await expect(page.getByText('Split assignment', { exact: true })).toHaveCount(
-    0,
-  )
+  await expect(
+    page.getByRole('button', { name: 'BEFORE SPLIT', exact: true }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('region', { name: 'Clustering evidence' }),
+  ).not.toContainText(/DEMO|SYNTHETIC IDENTITIES|Status mock/)
   expect(errors).toEqual([])
 })
 test('split comparison and prediction overlay', async ({ page }) => {
@@ -148,16 +206,123 @@ test('axe smoke: primary views in both themes', async ({ page }) => {
     }
   }
 })
-test('desktop widths remain contained', async ({ page }) => {
-  for (const width of [1024, 1440, 1920]) {
+test('clustering previews and selected evidence remain contained on desktop and mobile', async ({
+  page,
+}) => {
+  for (const width of [390, 1024, 1360, 1440, 1920]) {
     await page.setViewportSize({ width, height: 1080 })
     await page.goto('/organization/clustering')
-    await expect(page.locator('main h1')).toBeVisible()
+    await expect(
+      page.getByRole('heading', {
+        name: 'Cluster visual explorer',
+        exact: true,
+      }),
+    ).toBeVisible()
+    const density = page.getByLabel('Density', { exact: true })
+    await expect(density).toHaveValue('compact')
+    const content = page
+      .getByRole('list', { name: 'Cluster contents' })
+      .getByRole('button')
+      .first()
+    await expect(content).toBeVisible()
+    await content.click()
+    await expect(content).toHaveAttribute('aria-pressed', 'true')
+    const grid = page.getByRole('list', { name: 'Cluster contents' })
+    const geometry = await grid.evaluate((element) => {
+      const detail = document.querySelector('#cluster-selected-content')!
+      const availableWidth = document
+        .querySelector('.clustering-evidence')!
+        .getBoundingClientRect().width
+      return {
+        availableWidth,
+        columns:
+          getComputedStyle(element).gridTemplateColumns.split(' ').length,
+        sticky: getComputedStyle(detail).position,
+        gridRight: element.getBoundingClientRect().right,
+        detailLeft: detail.getBoundingClientRect().left,
+        detailWidth: detail.getBoundingClientRect().width,
+        previewWidth: detail
+          .querySelector('.cluster-preview')!
+          .getBoundingClientRect().width,
+      }
+    })
+    const sideBySide = geometry.availableWidth > 900
+    expect(geometry.sticky).toBe(sideBySide ? 'sticky' : 'static')
+    expect(geometry.previewWidth).toBeLessThanOrEqual(220)
+    expect((await density.boundingBox())!.width).toBeLessThanOrEqual(150)
+    if (sideBySide) {
+      expect(geometry.columns).toBeGreaterThanOrEqual(6)
+      expect(geometry.columns).toBeLessThanOrEqual(8)
+      expect(geometry.detailLeft).toBeGreaterThan(geometry.gridRight)
+      expect(geometry.detailWidth).toBeGreaterThanOrEqual(320)
+      expect(geometry.detailWidth).toBeLessThanOrEqual(380)
+    }
+    const count = await grid.getByRole('button').count()
+    await density.selectOption('detailed')
+    await expect(content.locator('.cluster-tile-text')).toBeVisible()
+    await expect(content).toHaveAttribute('aria-pressed', 'true')
+    await expect(grid.getByRole('button')).toHaveCount(count)
+    await density.selectOption('compact')
+    await expect(content.locator('.cluster-tile-text')).toHaveCount(0)
+    await expect(content).toHaveAttribute('aria-pressed', 'true')
+    if (width === 1440) {
+      await page.screenshot({
+        path: 'test-results/clustering-compact-desktop.png',
+      })
+    }
+    const contentId = (await content.getAttribute('aria-label'))!.replace(
+      'Inspect content ',
+      '',
+    )
+    const detailLink = page.getByRole('link', {
+      name: 'View selected content',
+      exact: true,
+    })
+    if (sideBySide) {
+      await expect(detailLink).toBeHidden()
+      const canScrollGrid = await page
+        .locator('.cluster-inspection-layout')
+        .evaluate(
+          (element) =>
+            element.getBoundingClientRect().height -
+              element
+                .querySelector('#cluster-selected-content')!
+                .getBoundingClientRect().height >
+            80,
+        )
+      if (canScrollGrid) {
+        await page
+          .locator('.cluster-inspection-layout')
+          .evaluate((element) =>
+            window.scrollTo(
+              0,
+              window.scrollY + element.getBoundingClientRect().top + 40,
+            ),
+          )
+        const detailTop = await page
+          .locator('#cluster-selected-content')
+          .evaluate((element) => element.getBoundingClientRect().top)
+        expect(detailTop).toBeCloseTo(16, 0)
+      }
+    } else {
+      await detailLink.click()
+      await expect(page.locator('#cluster-selected-content')).toBeFocused()
+    }
+    const selected = page.locator('section.panel').filter({
+      has: page.getByRole('heading', {
+        name: 'Selected content',
+        exact: true,
+      }),
+    })
+    await expect(selected.getByText(contentId, { exact: true })).toBeVisible()
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
       `width ${width}`,
     ).toBe(true)
+    if (width === 390) {
+      await page.screenshot({ path: 'test-results/clustering-mobile.png' })
+    }
   }
 })
