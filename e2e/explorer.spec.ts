@@ -41,9 +41,14 @@ test('home, module navigation and core clustering interaction', async ({
 })
 test('split comparison and prediction overlay', async ({ page }) => {
   await page.goto('/organization/splits')
-  await page.getByLabel('Partition strategy').selectOption('demo-split-0')
   await expect(
-    page.getByRole('heading', { name: 'Historical · split distribution' }),
+    page.getByLabel('Partition strategy / seed', { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByText('REAL / VERIFIED EXPORT', { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: /· split distribution$/ }),
   ).toBeVisible()
   await page.goto('/segmentation/predictions')
   await page.getByLabel('Comparison layout').selectOption('Overlay')

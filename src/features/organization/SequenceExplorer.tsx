@@ -2,6 +2,7 @@
 import { useSearchParams } from 'react-router-dom'
 import {
   useOrganizationBoundaryZones,
+  useOrganizationMedia,
   useOrganizationTimelines,
 } from '@/data/organization-provider'
 import type {
@@ -15,6 +16,7 @@ import {
 } from '@/components/research/Evidence'
 import { TechnicalDetailsDrawer } from '@/components/research/TechnicalDetailsDrawer'
 import { OrganizationLinkageExplorer } from './OrganizationLinkageExplorer'
+import { TimelinePlayer } from './TimelinePlayer'
 import { Pager } from './evidence-views/Pager'
 
 export function SequenceExplorer() {
@@ -48,6 +50,7 @@ export function SequenceExplorer() {
 function TemporalEvidence() {
   const timelinesQuery = useOrganizationTimelines()
   const zonesQuery = useOrganizationBoundaryZones()
+  const mediaQuery = useOrganizationMedia()
 
   const timelines = timelinesQuery.data ?? []
   const allZones = zonesQuery.data ?? []
@@ -160,6 +163,22 @@ function TemporalEvidence() {
                 },
               ]}
             />
+
+            {mediaQuery.isPending ? (
+              <p className="panel-body" role="status">
+                Loading frame previews…
+              </p>
+            ) : mediaQuery.isError ? (
+              <Notice>
+                Frame preview metadata could not be loaded. Temporal and boundary
+                evidence remain available.
+              </Notice>
+            ) : (
+              <TimelinePlayer
+                timeline={active}
+                media={mediaQuery.data ?? []}
+              />
+            )}
 
             <div
               className="sequence-grid"

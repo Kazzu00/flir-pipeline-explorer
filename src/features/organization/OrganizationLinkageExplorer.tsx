@@ -12,6 +12,7 @@ import {
 } from '@/components/research/Evidence'
 import { TechnicalDetailsDrawer } from '@/components/research/TechnicalDetailsDrawer'
 import { Pager } from './evidence-views/Pager'
+import { organizationMediaUrl } from '@/data/organization-media'
 
 const PAGE_SIZE = 12
 
@@ -387,15 +388,6 @@ function PreviewFigure({
       )}
     </figure>
   )
-}
-
-function organizationMediaUrl(relativePath: string) {
-  const safePath = relativePath
-    .split('/')
-    .map((part) => encodeURIComponent(part))
-    .join('/')
-
-  return `/runtime/organization-media/${safePath}`
 }
 
 function formatScore(value: number | null) {

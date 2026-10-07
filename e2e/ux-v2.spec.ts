@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import { researchFixture } from '../src/test/research-fixture'
-test('runtime V2, sequence evidence, linkage and keyboard disclosure', async ({
+test('runtime V2 overview, exported temporal evidence, linkage and keyboard disclosure', async ({
   page,
 }) => {
   await page.route('**/runtime-config.js', (route) =>
@@ -38,13 +38,83 @@ test('runtime V2, sequence evidence, linkage and keyboard disclosure', async ({
     .getByRole('link', { name: 'Sequences & linkage', exact: true })
     .click()
   await expect(
-    page.getByRole('button', { name: /candidate zone zone-000001/ }),
+    page.getByRole('heading', {
+      name: 'Temporal structure and boundary evidence',
+      exact: true,
+    }),
+  ).toBeVisible()
+  const boundaryZones = page.getByRole('button', {
+    name: /^boundary zone .+: \d+–\d+, .+$/,
+  })
+  // Find an exported zone without assuming a timeline ID or a candidate decision.
+  const timeline = page.getByLabel('Timeline', { exact: true })
+  const timelineIds = await timeline
+    .locator('option')
+    .evaluateAll((options) =>
+      options.map((option) => (option as HTMLOptionElement).value),
+    )
+  for (const id of timelineIds) {
+    if (await boundaryZones.count()) break
+    await timeline.selectOption(id)
+  }
+  const boundary = boundaryZones.last()
+  await expect(boundary).toBeVisible()
+  const label = await boundary.getAttribute('aria-label')
+  const match = /^boundary zone (.+): (\d+)–(\d+), (.+)$/.exec(label ?? '')
+  expect(match).not.toBeNull()
+  const [, evidenceId, start, end, decision] = match!
+  await boundary.click()
+  await expect(boundary).toHaveAttribute('aria-pressed', 'true')
+  const selectedBoundary = page.locator('section.panel').filter({
+    has: page.getByRole('heading', {
+      name: 'Selected boundary evidence',
+      exact: true,
+    }),
+  })
+  await expect(
+    selectedBoundary.getByText(evidenceId, { exact: true }),
   ).toBeVisible()
   await expect(
-    page.getByRole('button', { name: /boundary zone zone-000002/ }),
+    selectedBoundary.getByText(`${start}–${end}`, { exact: true }),
   ).toBeVisible()
-  await page.getByRole('button', { name: /boundary zone zone-000002/ }).click()
-  await expect(page.getByText('Bound review', { exact: true })).toBeVisible()
+  await expect(
+    selectedBoundary.getByText(decision, { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByText(
+      /Boundary zones are inclusive uncertainty intervals, not exact cuts\./,
+    ),
+  ).toBeVisible()
+  const boundaryDetails = selectedBoundary.getByRole('button', {
+    name: 'Technical details',
+    exact: true,
+  })
+  await boundaryDetails.focus()
+  await page.keyboard.press('Enter')
+  const boundaryDialog = page.getByRole('dialog')
+  await expect(boundaryDialog).toBeVisible()
+  const boundaryEvidence = JSON.parse(
+    await boundaryDialog.locator('pre').innerText(),
+  )
+  expect(boundaryEvidence.boundary_zone).toMatchObject({
+    element_id: evidenceId,
+    start: Number(start),
+    end: Number(end),
+    decision,
+  })
+  expect(boundaryEvidence.timeline.timeline_id).toBe(
+    await timeline.inputValue(),
+  )
+  await page.keyboard.press('Escape')
+  await expect(boundaryDetails).toBeFocused()
+  await expect(
+    selectedBoundary
+      .locator('.metric-summary > div')
+      .filter({
+        has: page.locator('dt', { hasText: /^Exact cut$/ }),
+      })
+      .locator('dd'),
+  ).toHaveText(boundaryEvidence.boundary_zone.exact_cut ? 'Yes' : 'No')
   expect(
     (
       await new AxeBuilder({ page })
@@ -57,18 +127,65 @@ test('runtime V2, sequence evidence, linkage and keyboard disclosure', async ({
     fullPage: true,
   })
   await page
-    .getByRole('button', { name: /sequence instance sequence-000002/ })
+    .getByRole('button', { name: 'Evidence and provenance', exact: true })
     .click()
   await expect(
-    page.getByText('Bound source-set review', { exact: true }),
+    page
+      .getByRole('dialog')
+      .getByText(/Timeline ≠ sequence\. Boundary zone ≠ exact cut\./),
   ).toBeVisible()
+  await page.keyboard.press('Escape')
   await page
     .getByRole('button', { name: 'Cross-dataset linkage', exact: true })
     .click()
-  await expect(page.getByText('candidate', { exact: true })).toBeVisible()
   await expect(
-    page.getByText(/A candidate line is not a confirmed link/),
+    page.getByText(
+      /A candidate is not a confirmed match, sequence identity, ground truth, dependency or split constraint\./,
+    ),
   ).toBeVisible()
+  const candidate = page
+    .getByRole('button', { name: /LABELED CONTENT .*candidate.*VIDEO CONTENT/ })
+    .first()
+  await expect(candidate).toBeVisible()
+  await candidate.click()
+  await expect(candidate).toHaveAttribute('aria-pressed', 'true')
+  const selectedCandidate = page.locator('section.panel').filter({
+    has: page.getByRole('heading', { name: 'Selected candidate', exact: true }),
+  })
+  const candidateDetails = selectedCandidate.getByRole('button', {
+    name: 'Technical details',
+    exact: true,
+  })
+  await candidateDetails.focus()
+  await page.keyboard.press('Enter')
+  const candidateDialog = page.getByRole('dialog')
+  await expect(candidateDialog).toBeVisible()
+  const candidateEvidence = JSON.parse(
+    await candidateDialog.locator('pre').innerText(),
+  )
+  await page.keyboard.press('Escape')
+  await expect(candidateDetails).toBeFocused()
+  await expect(
+    selectedCandidate
+      .locator('code')
+      .filter({ hasText: candidateEvidence.labeled_content_id }),
+  ).toHaveText(candidateEvidence.labeled_content_id)
+  await expect(
+    selectedCandidate
+      .locator('code')
+      .filter({ hasText: candidateEvidence.video_content_id }),
+  ).toHaveText(candidateEvidence.video_content_id)
+  for (const [metric, score] of [
+    ['CLIP cosine', candidateEvidence.clip_cosine],
+    ['DINOv2 cosine', candidateEvidence.dinov2_cosine],
+  ] as const) {
+    const row = selectedCandidate.locator('.metric-summary > div').filter({
+      has: page.locator('dt', { hasText: new RegExp(`^${metric}$`) }),
+    })
+    await expect(row.locator('dd')).toHaveText(
+      score === null ? 'unavailable' : score.toFixed(4),
+    )
+  }
   expect(
     (
       await new AxeBuilder({ page })
@@ -77,7 +194,9 @@ test('runtime V2, sequence evidence, linkage and keyboard disclosure', async ({
     ).violations,
   ).toEqual([])
 })
-test('legacy redirects and missing temporal evidence', async ({ page }) => {
+test('legacy redirects and active exported temporal evidence', async ({
+  page,
+}) => {
   for (const [old, destination] of Object.entries({
     dataset: '/organization',
     embeddings: '/organization/explore?view=embeddings',
@@ -95,6 +214,19 @@ test('legacy redirects and missing temporal evidence', async ({ page }) => {
   }
   await page.goto('/organization/sequences')
   await expect(
-    page.getByRole('heading', { name: 'Sequences: pending' }),
+    page.getByRole('heading', {
+      name: 'Temporal structure and boundary evidence',
+      exact: true,
+    }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Temporal evidence', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByLabel('Timeline', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('heading', {
+      name: 'Temporal evidence timeline',
+      exact: true,
+    }),
   ).toBeVisible()
 })
