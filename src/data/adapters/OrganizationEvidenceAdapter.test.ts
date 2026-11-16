@@ -1,15 +1,9 @@
-﻿import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { organizationEvidenceFixture } from '@/test/organization-evidence-fixture'
 import {
   OrganizationEvidenceAdapter,
   OrganizationEvidenceError,
 } from './OrganizationEvidenceAdapter'
-
-const manifestPath = resolve(
-  process.cwd(),
-  'public/runtime/organization-evidence-v2/manifest.json',
-)
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -26,10 +20,13 @@ describe('OrganizationEvidenceAdapter', () => {
         requested.push(url)
 
         if (url === '/runtime/organization-evidence-v2/manifest.json') {
-          return new Response(readFileSync(manifestPath, 'utf8'), {
-            status: 200,
-            headers: { 'content-type': 'application/json' },
-          })
+          return new Response(
+            JSON.stringify(organizationEvidenceFixture().manifest),
+            {
+              status: 200,
+              headers: { 'content-type': 'application/json' },
+            },
+          )
         }
 
         return new Response('', { status: 404 })

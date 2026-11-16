@@ -1,5 +1,4 @@
-export const DEFAULT_ORGANIZATION_MEDIA_BASE_URL =
-  '/runtime/organization-media'
+export const DEFAULT_ORGANIZATION_MEDIA_BASE_URL = '/runtime/organization-media'
 
 function normalizeMediaBaseUrl(baseUrl: string) {
   const normalized = baseUrl.replace(/\/+$/, '')
@@ -33,19 +32,12 @@ export function organizationMediaUrl(
   const parts = relativePath.split('/')
 
   if (
-    parts.some(
-      (part) =>
-        part.length === 0 ||
-        part === '.' ||
-        part === '..',
-    )
+    parts.some((part) => part.length === 0 || part === '.' || part === '..')
   ) {
     throw new Error('invalid-organization-media-relative-path')
   }
 
-  const safePath = parts
-    .map((part) => encodeURIComponent(part))
-    .join('/')
+  const safePath = parts.map((part) => encodeURIComponent(part)).join('/')
 
   return `${normalizedBase}/${safePath}`
 }

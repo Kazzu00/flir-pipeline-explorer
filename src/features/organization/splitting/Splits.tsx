@@ -1,9 +1,5 @@
 ﻿import { useMemo, useState } from 'react'
-import {
-  Notice,
-  Panel,
-  Select,
-} from '@/components/feedback/Primitives'
+import { Notice, Panel, Select } from '@/components/feedback/Primitives'
 import {
   useOrganizationSplits,
   useOrganizationSplitMemberships,
@@ -39,8 +35,7 @@ export function Splits() {
     if (!selected || !membershipsQuery.data) return []
 
     return membershipsQuery.data.filter(
-      (membership) =>
-        membership.split_space_id === selected.split_space_id,
+      (membership) => membership.split_space_id === selected.split_space_id,
     )
   }, [membershipsQuery.data, selected])
 
@@ -101,27 +96,21 @@ export function Splits() {
         />
 
         <div className="split-toggle">
-          <button
-            aria-pressed={!after}
-            onClick={() => setAfter(false)}
-          >
+          <button aria-pressed={!after} onClick={() => setAfter(false)}>
             BEFORE SPLIT
           </button>
 
-          <button
-            aria-pressed={after}
-            onClick={() => setAfter(true)}
-          >
+          <button aria-pressed={after} onClick={() => setAfter(true)}>
             AFTER SPLIT
           </button>
         </div>
       </div>
 
       <Notice>
-        This view reads stored split evidence from
-        organization-evidence-v2. Counts, class support and memberships are
-        presented from the exported artifacts; the frontend does not recompute
-        a partition or rank strategies.
+        This view reads stored split evidence from organization-evidence-v2.
+        Counts, class support and memberships are presented from the exported
+        artifacts; the frontend does not recompute a partition or rank
+        strategies.
       </Notice>
 
       <Panel
@@ -145,9 +134,7 @@ export function Splits() {
               </tr>
               <tr>
                 <th>Cluster run</th>
-                <td className="mono">
-                  {selected.cluster_run_id ?? '—'}
-                </td>
+                <td className="mono">{selected.cluster_run_id ?? '—'}</td>
               </tr>
               <tr>
                 <th>Total records</th>
@@ -235,25 +222,17 @@ export function Splits() {
                 </thead>
                 <tbody>
                   {classSupport.map((row) => (
-                    <tr
-                      key={`${row.split}-${row.class_id}`}
-                    >
+                    <tr key={`${row.split}-${row.class_id}`}>
                       <td>{row.split}</td>
                       <td>
                         {row.class_name}{' '}
-                        <span className="mono">
-                          ({row.class_id})
-                        </span>
+                        <span className="mono">({row.class_id})</span>
                       </td>
                       <td>{formatNumber(row.images)}</td>
                       <td>{formatNumber(row.contents)}</td>
                       <td>{formatNumber(row.instances)}</td>
-                      <td>
-                        {row.instance_percentage.toFixed(2)}%
-                      </td>
-                      <td>
-                        {row.global_instance_percentage.toFixed(2)}%
-                      </td>
+                      <td>{row.instance_percentage.toFixed(2)}%</td>
+                      <td>{row.global_instance_percentage.toFixed(2)}%</td>
                       <td>
                         {row.absolute_percentage_point_deviation.toFixed(3)}
                       </td>
@@ -302,12 +281,8 @@ export function Splits() {
                           key={`${membership.record_id}-${membership.content_id}-${membership.partition}`}
                         >
                           <td>{membership.partition}</td>
-                          <td className="mono">
-                            {membership.content_id}
-                          </td>
-                          <td className="mono">
-                            {membership.record_id}
-                          </td>
+                          <td className="mono">{membership.content_id}</td>
+                          <td className="mono">{membership.record_id}</td>
                         </tr>
                       ))}
                   </tbody>
@@ -381,15 +356,9 @@ export function Splits() {
                   </td>
                   <td>{formatStrategy(split.source_strategy)}</td>
                   <td>{split.split_seed}</td>
-                  <td>
-                    {formatNumber(split.partitions.train.n_records)}
-                  </td>
-                  <td>
-                    {formatNumber(split.partitions.val.n_records)}
-                  </td>
-                  <td>
-                    {formatNumber(split.partitions.test.n_records)}
-                  </td>
+                  <td>{formatNumber(split.partitions.train.n_records)}</td>
+                  <td>{formatNumber(split.partitions.val.n_records)}</td>
+                  <td>{formatNumber(split.partitions.test.n_records)}</td>
                   <td className="mono">{split.split_space_id}</td>
                 </tr>
               ))}
@@ -406,4 +375,3 @@ export function Splits() {
     </>
   )
 }
-

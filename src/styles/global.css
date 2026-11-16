@@ -882,6 +882,12 @@ input[type='range'] {
   gap: 20px;
   align-items: start;
 }
+@container cluster-inspection (min-width: 901px) {
+  .cluster-inspection-layout {
+    /* A singleton gallery must still leave room for the sticky evidence panel. */
+    min-height: calc(100dvh + 64px);
+  }
+}
 .cluster-selected-content {
   min-width: 0;
   position: sticky;

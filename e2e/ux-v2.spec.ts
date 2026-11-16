@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './organization-fixture'
 import AxeBuilder from '@axe-core/playwright'
 import { researchFixture } from '../src/test/research-fixture'
 test('runtime V2 overview, exported temporal evidence, linkage and keyboard disclosure', async ({

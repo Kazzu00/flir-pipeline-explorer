@@ -1,9 +1,4 @@
-﻿import {
-  createContext,
-  useContext,
-  useMemo,
-  type ReactNode,
-} from 'react'
+﻿import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { OrganizationEvidenceResource } from '@/contracts/organization-evidence-v2'
 import {
@@ -43,9 +38,10 @@ export function useOrganizationEvidenceAdapter() {
   return adapter
 }
 
-export function useOrganizationResource<
-  K extends OrganizationEvidenceResource,
->(resource: K, enabled = true) {
+export function useOrganizationResource<K extends OrganizationEvidenceResource>(
+  resource: K,
+  enabled = true,
+) {
   const adapter = useOrganizationEvidenceAdapter()
 
   return useQuery<OrganizationEvidenceResourceData<K>>({

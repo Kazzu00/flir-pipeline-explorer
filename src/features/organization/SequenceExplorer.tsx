@@ -170,14 +170,11 @@ function TemporalEvidence() {
               </p>
             ) : mediaQuery.isError ? (
               <Notice>
-                Frame preview metadata could not be loaded. Temporal and boundary
-                evidence remain available.
+                Frame preview metadata could not be loaded. Temporal and
+                boundary evidence remain available.
               </Notice>
             ) : (
-              <TimelinePlayer
-                timeline={active}
-                media={mediaQuery.data ?? []}
-              />
+              <TimelinePlayer timeline={active} media={mediaQuery.data ?? []} />
             )}
 
             <div
@@ -189,18 +186,16 @@ function TemporalEvidence() {
                 <span>{frameMax ?? '—'}</span>
               </div>
 
-              {zones
-                .slice(page * 20, page * 20 + 20)
-                .map((zone) => (
-                  <BoundaryLane
-                    key={zone.element_id}
-                    zone={zone}
-                    frameMin={frameMin}
-                    frameMax={frameMax}
-                    selected={selectedZone?.element_id === zone.element_id}
-                    onSelect={() => setSelectedZoneId(zone.element_id)}
-                  />
-                ))}
+              {zones.slice(page * 20, page * 20 + 20).map((zone) => (
+                <BoundaryLane
+                  key={zone.element_id}
+                  zone={zone}
+                  frameMin={frameMin}
+                  frameMax={frameMax}
+                  selected={selectedZone?.element_id === zone.element_id}
+                  onSelect={() => setSelectedZoneId(zone.element_id)}
+                />
+              ))}
 
               {!zones.length && (
                 <p className="panel-body muted">
@@ -354,4 +349,3 @@ function timelineLabel(timeline: OrganizationTimeline) {
 
   return `${identity} · ${timeline.temporal_source.replaceAll('_', ' ')}`
 }
-

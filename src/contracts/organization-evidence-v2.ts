@@ -1,12 +1,7 @@
 ﻿import { z } from 'zod'
 
 export type JsonValue =
-  | null
-  | boolean
-  | number
-  | string
-  | JsonValue[]
-  | { [key: string]: JsonValue }
+  null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue }
 
 export const JsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
   z.union([
@@ -79,11 +74,9 @@ export const SemanticsSchema = z
     clusters_are_sequences: z.literal(false).default(false),
     ground_truth_clusters: z.literal(false).default(false),
     ground_truth_sequences: z.literal(false).default(false),
-    partition_vocabulary: z.array(PartitionSchema).default([
-      'train',
-      'val',
-      'test',
-    ]),
+    partition_vocabulary: z
+      .array(PartitionSchema)
+      .default(['train', 'val', 'test']),
     sequence_instances_created: z.literal(false).default(false),
   })
   .strict()
@@ -242,11 +235,7 @@ export const SplitSchema = z
     split_seed: NonNegativeInt,
     split_space_id: z.string(),
     artifact_id: z.string(),
-    source_strategy: z.enum([
-      'historical',
-      'random_content',
-      'cluster_aware',
-    ]),
+    source_strategy: z.enum(['historical', 'random_content', 'cluster_aware']),
     cluster_run_id: z.string().nullable(),
     partitions: z.record(z.string(), PartitionSummarySchema),
     class_support: z.array(ClassSupportSchema).nullable(),
@@ -287,12 +276,8 @@ export const ClusteringConfigurationSchema = z
     extractor: z.string().nullable(),
     algorithm: z.enum(['dbscan', 'optics', 'hdbscan']).nullable(),
 
-    parameters: z
-      .record(z.string(), JsonValueSchema)
-      .nullable(),
-    effective_parameters: z
-      .record(z.string(), JsonValueSchema)
-      .nullable(),
+    parameters: z.record(z.string(), JsonValueSchema).nullable(),
+    effective_parameters: z.record(z.string(), JsonValueSchema).nullable(),
 
     n_clusters: NonNegativeInt,
     n_noise: NonNegativeInt,
@@ -390,12 +375,7 @@ export const BoundaryZoneSchema = z
     timeline_ids: z.array(z.string()),
     start: NonNegativeInt,
     end: NonNegativeInt,
-    decision: z.enum([
-      'supported',
-      'ambiguous',
-      'unsupported',
-      'candidate',
-    ]),
+    decision: z.enum(['supported', 'ambiguous', 'unsupported', 'candidate']),
     notes: z.string(),
 
     exact_cut: z.literal(false).default(false),
@@ -475,9 +455,7 @@ export type OrganizationManifest = z.infer<typeof ManifestSchema>
 export type OrganizationContent = z.infer<typeof ContentSchema>
 export type OrganizationRecord = z.infer<typeof RecordSchema>
 export type OrganizationSplit = z.infer<typeof SplitSchema>
-export type OrganizationSplitMembership = z.infer<
-  typeof SplitMembershipSchema
->
+export type OrganizationSplitMembership = z.infer<typeof SplitMembershipSchema>
 export type OrganizationClusteringConfiguration = z.infer<
   typeof ClusteringConfigurationSchema
 >
@@ -499,5 +477,3 @@ export type OrganizationEvidenceBundle = z.infer<
 >
 export type OrganizationEvidenceResource =
   keyof typeof OrganizationEvidenceResourceSchemas
-
-
