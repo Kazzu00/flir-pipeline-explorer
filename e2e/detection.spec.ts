@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './organization-fixture'
 import AxeBuilder from '@axe-core/playwright'
 
 test('verified detector story, disclosure, associations and responsive layouts', async ({

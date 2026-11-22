@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './organization-fixture'
 
 // Local evidence is large; await observable readiness, never a fixed sleep.
 test.use({ actionTimeout: 20000 })

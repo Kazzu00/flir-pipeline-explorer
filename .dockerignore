@@ -18,6 +18,8 @@ models
 tools
 e2e
 src/test
+**/*.test.ts
+**/*.test.tsx
 **/__pycache__
 .venv
 .pytest_cache

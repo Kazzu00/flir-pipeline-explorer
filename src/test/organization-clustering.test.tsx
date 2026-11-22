@@ -316,9 +316,7 @@ describe('Organization clustering contract view (synthetic inputs)', () => {
       ),
     ).toBeVisible()
     expect(screen.getByText('Not verified in export')).toBeVisible()
-    expect(
-      screen.queryByText('Included in export', { exact: true }),
-    ).toBeNull()
+    expect(screen.queryByText('Included in export', { exact: true })).toBeNull()
     expect(
       screen.getByLabelText('Clustering configuration'),
     ).not.toHaveTextContent(/null|undefined/)

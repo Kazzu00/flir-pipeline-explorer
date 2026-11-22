@@ -70,17 +70,17 @@ e2e/                          navegador y axe
 
 ## Rutas
 
-| Ruta                       | Vista                                                            |
-| -------------------------- | ---------------------------------------------------------------- |
-| `/`                        | Pipeline global navegable                                        |
-| `/organization`            | Dataset y disponibilidad de evidencia                            |
+| Ruta                       | Vista                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| `/`                        | Pipeline global navegable                                                            |
+| `/organization`            | Dataset y disponibilidad de evidencia                                                |
 | `/organization/explore`    | Encoder para embeddings/similitud/reducción; configuración exportada para clustering |
-| `/organization/sequences`  | Sequence structure / Cross-dataset linkage                       |
-| `/organization/evaluation` | Grouping/split, dependencia residual y detector                  |
-| `/preprocessing/:stage?`   | M01 DEMO, sin integración nueva                                  |
-| `/segmentation/:stage?`    | M03 DEMO, sin integración nueva                                  |
-| `/experiments`             | Registro y detalle de runs                                       |
-| `/evaluation`              | Evaluación global y límites                                      |
+| `/organization/sequences`  | Sequence structure / Cross-dataset linkage                                           |
+| `/organization/evaluation` | Grouping/split, dependencia residual y detector                                      |
+| `/preprocessing/:stage?`   | M01 DEMO, sin integración nueva                                                      |
+| `/segmentation/:stage?`    | M03 DEMO, sin integración nueva                                                      |
+| `/experiments`             | Registro y detalle de runs                                                           |
+| `/evaluation`              | Evaluación global y límites                                                          |
 
 Las ocho rutas anteriores de M02 siguen funcionando mediante redirects; por ejemplo `/organization/reduction` → `/organization/explore?view=reduction`. Detalles en [INFORMATION_ARCHITECTURE](docs/INFORMATION_ARCHITECTURE.md).
 

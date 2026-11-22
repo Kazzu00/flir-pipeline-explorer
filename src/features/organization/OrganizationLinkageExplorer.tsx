@@ -45,9 +45,7 @@ export function OrganizationLinkageExplorer() {
     )
 
     const resolve = (
-      content:
-        | (typeof contentsQuery.data)[number]
-        | undefined,
+      content: (typeof contentsQuery.data)[number] | undefined,
     ) => {
       if (!content) return null
 
@@ -106,8 +104,8 @@ export function OrganizationLinkageExplorer() {
 
       <Notice>
         Each row is a stored candidate edge. CLIP and DINOv2 evidence are
-        preserved independently. A candidate is not a confirmed match,
-        sequence identity, ground truth, dependency or split constraint.
+        preserved independently. A candidate is not a confirmed match, sequence
+        identity, ground truth, dependency or split constraint.
       </Notice>
 
       <Panel
@@ -137,8 +135,7 @@ export function OrganizationLinkageExplorer() {
 
         <div className="linkage-list">
           {visible.map((candidate) => {
-            const isSelected =
-              selected?.candidate_id === candidate.candidate_id
+            const isSelected = selected?.candidate_id === candidate.candidate_id
 
             return (
               <div className="linkage-item" key={candidate.candidate_id}>
@@ -172,7 +169,6 @@ export function OrganizationLinkageExplorer() {
           setPage={setPage}
         />
       </Panel>
-
     </>
   )
 }
@@ -196,10 +192,7 @@ function SelectedCandidateDetail({
   mediaError: boolean
 }) {
   return (
-    <Panel
-      title="Selected candidate"
-      meta={`ID · ${candidate.candidate_id}`}
-    >
+    <Panel title="Selected candidate" meta={`ID · ${candidate.candidate_id}`}>
       <MetricSummary
         items={[
           {
@@ -245,14 +238,8 @@ function SelectedCandidateDetail({
             gap: '1rem',
           }}
         >
-          <PreviewFigure
-            label="Labeled content"
-            evidence={previews.labeled}
-          />
-          <PreviewFigure
-            label="Video content"
-            evidence={previews.video}
-          />
+          <PreviewFigure label="Labeled content" evidence={previews.labeled} />
+          <PreviewFigure label="Video content" evidence={previews.video} />
         </div>
       ) : null}
 
@@ -276,9 +263,7 @@ function SelectedCandidateDetail({
       </div>
 
       <TechnicalDetailsDrawer>
-        <pre className="audit-json">
-          {JSON.stringify(candidate, null, 2)}
-        </pre>
+        <pre className="audit-json">{JSON.stringify(candidate, null, 2)}</pre>
       </TechnicalDetailsDrawer>
     </Panel>
   )
@@ -294,11 +279,7 @@ function CandidateRow({
   onSelect: () => void
 }) {
   return (
-    <button
-      className="linkage-pair"
-      aria-pressed={selected}
-      onClick={onSelect}
-    >
+    <button className="linkage-pair" aria-pressed={selected} onClick={onSelect}>
       <span>
         <span className="eyebrow">LABELED CONTENT</span>
         <strong>{shortId(candidate.labeled_content_id)}</strong>
@@ -381,11 +362,7 @@ function PreviewFigure({
         </p>
       )}
 
-      {evidence && (
-        <small>
-          content {shortId(evidence.contentId)}
-        </small>
-      )}
+      {evidence && <small>content {shortId(evidence.contentId)}</small>}
     </figure>
   )
 }
@@ -401,5 +378,3 @@ function formatRank(value: number | null) {
 function shortId(value: string) {
   return value.length <= 16 ? value : `${value.slice(0, 12)}…`
 }
-
-
