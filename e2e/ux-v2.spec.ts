@@ -46,6 +46,9 @@ test('runtime V2 overview, exported temporal evidence, linkage and keyboard disc
   await page
     .getByRole('link', { name: 'Sequences & linkage', exact: true })
     .click()
+  await page
+    .getByRole('button', { name: 'Temporal evidence', exact: true })
+    .click()
   await evidenceExpect(
     page.getByRole('heading', {
       name: 'Temporal structure and boundary evidence',
@@ -222,6 +225,9 @@ test('legacy redirects and active exported temporal evidence', async ({
     )
   }
   await page.goto('/organization/sequences')
+  await page
+    .getByRole('button', { name: 'Temporal evidence', exact: true })
+    .click()
   await evidenceExpect(
     page.getByRole('heading', {
       name: 'Temporal structure and boundary evidence',
