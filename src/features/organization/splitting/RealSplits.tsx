@@ -289,7 +289,10 @@ function SplitPanel({
     ([, parts]) => parts.size > 1,
   )
   return (
-    <section aria-label={`${side} split details`}>
+    <section
+      className="real-split-details"
+      aria-label={`${side} split details`}
+    >
       <Panel title={runLabel(run)} meta={run.family}>
         <p>Test status: {run.testStatus}</p>
         <div className="table-scroll">
