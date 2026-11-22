@@ -4,6 +4,8 @@ Interfaz de investigación para explorar tres pipelines independientes de visió
 
 ## Estado
 
+- **Cierre publicado 2026-11-22:** línea temporal y exportadores recuperados, integración con `main` en rama de revisión y comprobaciones locales documentadas. [Resultados de pruebas, reproducción y límites](docs/CLOSEOUT_20261122.md).
+
 - **Línea temporal científica:** `/organization/sequences` admite solo correspondencias exactas y únicas con tres vídeos autorizados; abre la asignación histórica S2-3 de la entrega y permite comparar políticas/semillas sin mezclar membresías. La evidencia local actual no vincula las imágenes canónicas: muestra cobertura cero y exclusiones completas, sin dibujar familias nominales como vídeos. Clúster compatible no disponible. No crea secuencias ni cambia splits o admisión del test. [Contrato, reproducción y límites](docs/VERIFIED_VIDEO_TIMELINE.md).
 
 - **Human Review v1.1:** evidencia trazable obligatoria para conclusiones, registro visual externo explícito, filtros de disponibilidad, orden temporal y siguiente pendiente. Conserva historias y muestra anomalías sin inferir leakage. [Operación y resultados de pruebas](docs/AUDIT_REVIEW.md).
