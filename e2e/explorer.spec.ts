@@ -104,6 +104,7 @@ test('split comparison and prediction overlay', async ({ page }) => {
       name: 'Visual inspection of real split memberships',
     }),
   ).toBeVisible()
+  await page.getByLabel('Compare side by side', { exact: true }).check()
   await expect(page.getByLabel('Left split', { exact: true })).toBeVisible()
   await page.goto('/segmentation/predictions')
   await page.getByLabel('Comparison layout').selectOption('Overlay')

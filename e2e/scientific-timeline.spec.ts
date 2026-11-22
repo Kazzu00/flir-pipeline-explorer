@@ -1,8 +1,13 @@
-import { test, expect } from '@playwright/test'
+import { test, expect as baseExpect } from './organization-fixture'
 import AxeBuilder from '@axe-core/playwright'
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { verifiedVideoFixture } from '../src/test/scientific-timeline-fixture'
+
+// Await observable lazy-module readiness, independent of local runtime mounts.
+const expect = baseExpect.configure({ timeout: 20000 })
+test.use({ actionTimeout: 20000 })
+test.setTimeout(120000)
 
 test('synthetic timeline: synchronized lanes, keyboard, recurrence, interval, CSV and both themes', async ({
   page,

@@ -1,5 +1,36 @@
-import { describe, expect, it } from 'vitest'
-import { CandidateSplitsSchema, candidateRuns } from '@/data/split-evidence'
+import { describe, expect, it, vi } from 'vitest'
+import {
+  CandidateSplitsSchema,
+  candidateRuns,
+  loadHistoricalSplits,
+} from '@/data/split-evidence'
+import { organizationEvidenceFixture } from './organization-evidence-fixture'
+
+it('offline browser fixture has complete labeled historical memberships', async () => {
+  const bundle = organizationEvidenceFixture()
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL) => {
+      const resource = String(input).split('/').at(-1)!.replace('.json', '')
+      return new Response(
+        JSON.stringify(bundle[resource as keyof typeof bundle]),
+      )
+    }),
+  )
+  try {
+    const result = await loadHistoricalSplits()
+    expect(result.runs).toHaveLength(2)
+    for (const run of result.runs)
+      expect(run.members).toHaveLength(bundle.manifest.labeled_record_count)
+    expect(
+      bundle.records.every(
+        (r) => r.cohort === 'labeled' && r.label_empty !== null,
+      ),
+    ).toBe(true)
+  } finally {
+    vi.unstubAllGlobals()
+  }
+})
 
 function fixture() {
   return {
