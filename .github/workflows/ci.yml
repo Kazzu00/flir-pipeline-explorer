@@ -51,4 +51,20 @@ jobs:
       - run: npm run build
       - run: npm run format:check
       - run: npx playwright install --with-deps chromium
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install uv==0.12.10
+      - name: Prepare pinned audit backend outside the frontend checkout
+        shell: bash
+        run: |
+          git init "$RUNNER_TEMP/flir-audit-backend"
+          git -C "$RUNNER_TEMP/flir-audit-backend" remote add origin https://github.com/Kazzu00/flir-leakage-pipeline.git
+          git -C "$RUNNER_TEMP/flir-audit-backend" fetch --depth=1 origin 0a2ca70ffcbed142a4b7498bdd573b3709093b25
+          git -C "$RUNNER_TEMP/flir-audit-backend" checkout --detach FETCH_HEAD
+          uv sync --project "$RUNNER_TEMP/flir-audit-backend" --locked
+          echo "FLIR_AUDIT_BACKEND=$RUNNER_TEMP/flir-audit-backend" >> "$GITHUB_ENV"
       - run: npm run test:e2e
+        env:
+          HF_HUB_OFFLINE: '1'
+          TRANSFORMERS_OFFLINE: '1'

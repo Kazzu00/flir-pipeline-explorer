@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react'
+﻿import { lazy, Suspense, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   useOrganizationBoundaryZones,
@@ -18,17 +18,31 @@ import { TechnicalDetailsDrawer } from '@/components/research/TechnicalDetailsDr
 import { OrganizationLinkageExplorer } from './OrganizationLinkageExplorer'
 import { TimelinePlayer } from './TimelinePlayer'
 import { Pager } from './evidence-views/Pager'
+import { AuditReview } from './AuditReview'
+const ScientificTimeline = lazy(() =>
+  import('./ScientificTimeline').then((module) => ({
+    default: module.ScientificTimeline,
+  })),
+)
 
 export function SequenceExplorer() {
   const [params, setParams] = useSearchParams()
   const linkage = params.get('mode') === 'linkage'
+  const audit = params.get('mode') === 'audit'
+  const temporal = params.get('mode') === 'sequences'
 
   return (
     <>
       <div className="toolbar">
         <div className="split-toggle" aria-label="Sequence and linkage views">
           <button
-            aria-pressed={!linkage}
+            aria-pressed={!linkage && !audit && !temporal}
+            onClick={() => setParams({ mode: 'timeline' })}
+          >
+            Línea temporal científica
+          </button>
+          <button
+            aria-pressed={temporal}
             onClick={() => setParams({ mode: 'sequences' })}
           >
             Temporal evidence
@@ -39,10 +53,28 @@ export function SequenceExplorer() {
           >
             Cross-dataset linkage
           </button>
+          <button
+            aria-pressed={audit}
+            onClick={() => setParams({ mode: 'audit' })}
+          >
+            Human audit review
+          </button>
         </div>
       </div>
 
-      {linkage ? <OrganizationLinkageExplorer /> : <TemporalEvidence />}
+      {audit ? (
+        <AuditReview />
+      ) : linkage ? (
+        <OrganizationLinkageExplorer />
+      ) : temporal ? (
+        <TemporalEvidence />
+      ) : (
+        <Suspense
+          fallback={<p role="status">Cargando línea temporal científica…</p>}
+        >
+          <ScientificTimeline />
+        </Suspense>
+      )}
     </>
   )
 }

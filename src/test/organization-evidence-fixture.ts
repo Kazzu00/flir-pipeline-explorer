@@ -4,6 +4,14 @@ import { organizationClusteringFixture } from './organization-clustering-fixture
 /** Offline infrastructure only. Never installed as a runtime/research snapshot. */
 export function organizationEvidenceFixture() {
   const base = organizationClusteringFixture(80)
+  // These synthetic occurrences also serve the labeled split explorer. Keep its
+  // annotation population consistent with the complete membership tables.
+  base.records = base.records.map((record) => ({
+    ...record,
+    cohort: 'labeled',
+    num_objects: record.class_ids?.length ?? 0,
+    label_empty: !record.class_ids?.length,
+  }))
   base.media = base.media.map((m) => ({
     ...m,
     media_available: false,
@@ -37,8 +45,8 @@ export function organizationEvidenceFixture() {
       runtime_freeze_sha256: 'synthetic-only',
       record_count: base.records.length,
       unique_content_count: base.contents.length,
-      labeled_record_count: 0,
-      labeled_unique_content_count: 0,
+      labeled_record_count: base.records.length,
+      labeled_unique_content_count: base.contents.length,
       source_video_count: 1,
       timeline_count: 1,
       split_count: splits.length,

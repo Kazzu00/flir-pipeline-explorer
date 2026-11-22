@@ -100,14 +100,12 @@ test('home, module navigation and core clustering interaction', async ({
 test('split comparison and prediction overlay', async ({ page }) => {
   await page.goto('/organization/splits')
   await expect(
-    page.getByLabel('Partition strategy / seed', { exact: true }),
+    page.getByRole('heading', {
+      name: 'Visual inspection of real split memberships',
+    }),
   ).toBeVisible()
-  await expect(
-    page.getByText('REAL / VERIFIED EXPORT', { exact: true }),
-  ).toBeVisible()
-  await expect(
-    page.getByRole('heading', { name: /· split distribution$/ }),
-  ).toBeVisible()
+  await page.getByLabel('Compare side by side', { exact: true }).check()
+  await expect(page.getByLabel('Left split', { exact: true })).toBeVisible()
   await page.goto('/segmentation/predictions')
   await page.getByLabel('Comparison layout').selectOption('Overlay')
   await page.getByRole('slider', { name: 'Overlay opacity' }).fill('70')

@@ -1,8 +1,16 @@
 # FLIR Pipeline Explorer
 
-Interfaz de investigación para explorar tres pipelines independientes de visión por computador sobre video aéreo de la Amazonía colombiana. **DEMO por defecto en el workspace; la evaluación del detector M02 utiliza el contrato REAL / VERIFIED de Hypatia. M02 también admite snapshots locales. No ejecuta procesamiento científico.**
+Interfaz de investigación para explorar tres pipelines independientes de visión por computador sobre video aéreo de la Amazonía colombiana. **M02 utiliza exclusivamente contratos reales; los recursos ausentes quedan explícitos. M01/M03 conservan sus modos DEMO. No ejecuta procesamiento científico.**
 
 ## Estado
+
+- **Cierre publicado 2026-11-22:** línea temporal y exportadores recuperados, integración con `main` en rama de revisión y comprobaciones locales documentadas. [Resultados de pruebas, reproducción y límites](docs/CLOSEOUT_20261122.md).
+
+- **Línea temporal científica:** `/organization/sequences` admite solo correspondencias exactas y únicas con tres vídeos autorizados; abre la asignación histórica S2-3 de la entrega y permite comparar políticas/semillas sin mezclar membresías. La evidencia local actual no vincula las imágenes canónicas: muestra cobertura cero y exclusiones completas, sin dibujar familias nominales como vídeos. Clúster compatible no disponible. No crea secuencias ni cambia splits o admisión del test. [Contrato, reproducción y límites](docs/VERIFIED_VIDEO_TIMELINE.md).
+
+- **Human Review v1.1:** evidencia trazable obligatoria para conclusiones, registro visual externo explícito, filtros de disponibilidad, orden temporal y siguiente pendiente. Conserva historias y muestra anomalías sin inferir leakage. [Operación y resultados de pruebas](docs/AUDIT_REVIEW.md).
+
+- **Aceptación local M02: ACCEPTED_WITH_LIMITATIONS.** Explorador de 16 splits históricos y 30 particiones candidatas S1/S2/S3, filtros, miniaturas existentes y comparación lateral. El test nuevo permanece PROPOSED y no hay resultados YOLO11m. Antecedentes y variantes se distinguen por disponibilidad y procedencia. [Pruebas, evidencia y pendientes](docs/M02_ACCEPTANCE.md).
 
 - **Detector conectado:** `/organization/evaluation` presenta el contrato público `detection-export-v1`, publicación upstream `0a4ea1f`: 48/48 runs, 16 splits, cuatro estrategias y siete asociaciones preespecificadas. Finalización y verificación reportadas upstream; validación de integridad aquí. Comparación descriptiva, no causal. [Contrato, procedencia y actualización](docs/DETECTION_CONTRACT.md).
 
@@ -117,3 +125,11 @@ Tests sintéticos y validación del contrato público ligero versionado del dete
 ## Seguridad y alcance
 
 No se versionan `.references`, `.env*`, datasets, archivos FLIR, pesos, cachés, reportes ejecutados ni artifacts nativos. Solo se incluye el contrato público del detector expresamente autorizado y documentado. Los repositorios científicos permanecen independientes. No se implementan algoritmos de ciencia de datos en este frontend; visualizar exports no equivale a ejecutar o revalidar experimentos.
+
+## Local human audit review
+
+The existing Sequences & linkage module includes **FLIR Audit & Human Review v1**,
+with a separate local evidence service, image context, independent audiovisual
+and visual-region judgments, durable version history and JSON/CSV exports.
+See [installation, synthetic smoke and review workflow](docs/AUDIT_REVIEW.md).
+No sequences, splits, training or scientific confirmations are created.
